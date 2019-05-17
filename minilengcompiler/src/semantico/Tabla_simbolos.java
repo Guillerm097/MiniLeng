@@ -39,7 +39,7 @@ public class Tabla_simbolos {
 	}
 	
 	// Buscar símbolo de mayor nivel
-	public Simbolo buscar_simbolo(String nombre) throws SimboloNoEncontradoException{
+	public Simbolo buscar_simbolo(String nombre) throws SimboloNoEncontradoException{ //TODO
 		int pos = hash(nombre);
 		Simbolo s = new Simbolo();
 		
@@ -140,21 +140,23 @@ public class Tabla_simbolos {
 	
 	public void eliminar_programa() {
 		boolean seguir = true;
-		for(nodoTabla nt : tabla) {
-			if((nt.getSim().es_programa()) && (nt.getSim().getNivel() == 0)){
+		int i = 0;
+	
+		while(seguir && i < this.tam) {
+			nodoTabla nt = tabla[i]; 
+			if((nt.getSim().es_programa())){
 				nt.s = null;
 			}
 			
-			// Iterar sobre la lista de simbolos
 			ListIterator<Simbolo> it = nt.lista_colisiones.listIterator();
 			
-
 			while(it.hasNext() && seguir) {
 				if((it.next().es_programa())) {
 					it.remove();
 					seguir = false;
 				}
 			}
+			i++;
 		}
 	}
 
@@ -164,7 +166,6 @@ public class Tabla_simbolos {
 				nt.s = null;
 			}
 			
-			// Iterar sobre la lista de simbolos
 			Iterator<Simbolo> it = nt.lista_colisiones.iterator();
 			while(it.hasNext()) {
 				if((it.next().es_variable()) && (nt.getSim().getNivel() == nivel)) {
@@ -175,15 +176,70 @@ public class Tabla_simbolos {
 	}
 	
 	public void ocultar_parametros(int nivel) {
-		
+		for(nodoTabla nt : tabla) {
+			if((nt.getSim().es_parametro()) && (nt.getSim().getNivel() == nivel)){
+				nt.s.setVisible(false);
+			}
+			
+			Iterator<Simbolo> it = nt.lista_colisiones.iterator();
+			while(it.hasNext()) {
+				if((it.next().es_parametro()) && (nt.getSim().getNivel() == nivel)) {
+					nt.s.setVisible(false);
+				}
+			}
+		}
 	}
 	
 	public void eliminar_parametros_ocultos(int nivel) {
-		
+		for(nodoTabla nt : tabla) {
+			if((nt.getSim().es_parametro()) && (nt.getSim().getNivel() == nivel) && (nt.getSim().getVisible() == false)){
+				eliminar_acciones_parametros_ocultos(nt.getSim().getLista_parametros());
+				nt.s = null;
+			}
+			
+			Iterator<Simbolo> it = nt.lista_colisiones.iterator();
+			while(it.hasNext()) {
+				Simbolo s = it.next();
+				if((s.es_parametro()) && (s.getNivel() == nivel) && (s.getVisible() == false)) {
+					eliminar_acciones_parametros_ocultos(s.getLista_parametros());
+					it.remove();
+				}
+			}
+		}
+	}
+	
+	public void eliminar_acciones_parametros_ocultos(LinkedList<Simbolo> lista_parametros) {
+		for(nodoTabla nt : tabla) {
+			if((nt.getSim().es_accion()) && (nt.getSim().getNivel() == nivel) && (nt.getSim().getLista_parametros() == lista_parametros)){
+				nt.s = null;
+			}
+			
+			Iterator<Simbolo> it = nt.lista_colisiones.iterator();
+			while(it.hasNext()) {
+				Simbolo s = it.next();
+				if((s.es_variable()) && (s.getNivel() == nivel) && (s.getLista_parametros() == lista_parametros)) {
+					it.remove();
+				}
+			}
+		}
 	}
 
-	public void eliminar_acciones(int nivel) {
-		
+	public void eliminar_acciones(int nivel) { // TODO
+		for(nodoTabla nt : tabla) {
+			if((nt.getSim().es_accion()) && (nt.getSim().getNivel() == nivel)){
+				LinkedList<Simbolo> lp = nt.s.getLista_parametros();
+				eliminar_parametros_acciones();
+				nt.s = null;
+			}
+			
+			Iterator<Simbolo> it = nt.lista_colisiones.iterator();
+			while(it.hasNext()) {
+				Simbolo s = it.next();
+				if((s.es_accion()) && (s.getNivel() == nivel)) {
+					it.remove();
+				}
+			}
+		}
 	}
 	
 	public void vectorPermutaciones() {

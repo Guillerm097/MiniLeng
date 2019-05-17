@@ -93,8 +93,28 @@ public class Simbolo {
 		this.nombre = nombre;
 	}
 	
+	public LinkedList<Simbolo> getLista_parametros() {
+		return lista_parametros;
+	}
+
+	public void setLista_parametros(LinkedList<Simbolo> lista_parametros) {
+		this.lista_parametros = lista_parametros;
+	}
+	
 	public int getNivel() {
 		return nivel;
+	}
+	
+	public void setNivel(int nivel) {
+		this.nivel = nivel;
+	}
+	
+	public boolean getVisible() {
+		return visible;
+	}
+	
+	public void setVisible(boolean visible) {
+		this.visible = visible;
 	}
 	
 	@Override
