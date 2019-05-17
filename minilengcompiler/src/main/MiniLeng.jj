@@ -1,0 +1,791 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */
+options
+{
+  ignore_case = true;
+  static = true;
+}
+
+PARSER_BEGIN(MiniLeng)
+
+package main;
+import lexico.LexicoUtils;
+import sintactico.SintacticoUtils;
+
+public class MiniLeng
+{
+  static LexicoUtils tl = new LexicoUtils();
+  
+  public static void main(String args []) throws ParseException
+  {
+    MiniLeng parser;
+
+	//boolean flagsv = args[args.length - 2].equals("flags") && args[args.length - 1].equals("-v");
+	boolean flagsv = false;
+    
+    if (args.length == 0 || (args.length == 2 && flagsv)) {
+      parser = new MiniLeng(System.in);
+  	}
+  	else if (args.length == 1 || (args.length == 3 && flagsv)) {
+  	  try {
+          parser = new MiniLeng(new java.io.FileInputStream(args[0]));
+      }
+      catch(java.io.FileNotFoundException e) {
+        System.out.println ("MiniLeng: The file " + args[0] + " was not found.");
+        return;
+      }
+	}
+	      
+   	try
+    {
+      //MiniLeng.one_line();
+	  MiniLeng.programa();
+      if (flagsv) {
+        LexicoUtils.mostrarTabla();
+      }
+   	}
+    catch (Error e) { // ERRORES LEXICOS
+      	LexicoUtils.mostrarErrorLexico(MiniLengTokenManager.input_stream.getBeginLine(),
+      									MiniLengTokenManager.input_stream.getBeginColumn(),
+      									MiniLengTokenManager.curChar);
+    }
+  }  
+}
+
+
+PARSER_END(MiniLeng)
+
+SKIP :
+{
+  " "
+| "%%" : WithinBlockComment
+| "%" : WithinLineComment
+| "\r"
+| "\t"
+| "\n"
+}
+
+<WithinBlockComment> SKIP :
+{
+  "%%" : DEFAULT
+}
+
+<WithinBlockComment> MORE :
+{
+  < ~[] >
+}
+
+<WithinLineComment> SKIP :
+{
+  "\n" : DEFAULT
+}
+
+<WithinLineComment> MORE :
+{
+  < ~[] >
+}
+
+TOKEN: /* PALABRAS RESERVADAS */
+{
+  < tVAL : "val" >			 {  LexicoUtils.anyadirToken("palabra reservada"); }
+| < tREF : "ref" > 			 {  LexicoUtils.anyadirToken("palabra reservada"); }
+| < tLEER : "leer" >		 {  LexicoUtils.anyadirToken("palabra reservada"); }
+| < tTRUE : "true" >		 {  LexicoUtils.anyadirToken("palabra reservada"); }
+| < tFALSE : "false" >		 {  LexicoUtils.anyadirToken("palabra reservada"); }
+| < tACCION : "accion" >	 {  LexicoUtils.anyadirToken("palabra reservada"); }
+| < tENTERO : "entero" >	 {  LexicoUtils.anyadirToken("palabra reservada");
+								LexicoUtils.anyadirToken("entero"); 			  }
+| < tENTACAR : "entacar" >	 {  LexicoUtils.anyadirToken("palabra reservada"); }
+| < tCARAENT : "caraent" > 	 {  LexicoUtils.anyadirToken("palabra reservada"); }	
+| < tBOOLEANO : "booleano" > {  LexicoUtils.anyadirToken("palabra reservada");
+								LexicoUtils.anyadirToken("booleano"); 		  }
+| < tCARACTER : "caracter" > {  LexicoUtils.anyadirToken("palabra reservada");
+								LexicoUtils.anyadirToken("caracter"); 		  }
+| < tESCRIBIR : "escribir" > {  LexicoUtils.anyadirToken("palabra reservada"); }
+| < tPROGRAMA : "programa" > {  LexicoUtils.anyadirToken("palabra reservada"); }
+}
+
+TOKEN : /* PALABRAS RESERVADAS CONTROL FLUJO */
+{
+  < tSI : "si" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
+| < tMQ : "mq" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
+| < tFIN : "fin" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
+| < tENT : "ent" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
+| < tFSI : "fsi" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
+| < tFMQ : "fmq" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
+| < tSI_NO : "si_no" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
+| < tPRINCIPIO : "principio" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
+}
+
+TOKEN : /* OPERATORS */
+{
+  < tPLUS : "+" >		{  LexicoUtils.anyadirToken("operador"); }
+| < tMINUS : "-" >		{  LexicoUtils.anyadirToken("operador"); }
+| < tMULTIPLY : "*" >	{  LexicoUtils.anyadirToken("operador"); }
+| < tDIVIDE : "/" >		{  LexicoUtils.anyadirToken("operador"); }
+| < tMAYOR : ">" >		{  LexicoUtils.anyadirToken("operador"); }
+| < tMENOR : "<" >		{  LexicoUtils.anyadirToken("operador"); }
+| < tIGUAL : "=" >		{  LexicoUtils.anyadirToken("operador"); }
+| < tMAI : ">=" >		{  LexicoUtils.anyadirToken("operador"); }
+| < tMEI : "<=" >		{  LexicoUtils.anyadirToken("operador"); }
+| < tNI : "<>" > 		{  LexicoUtils.anyadirToken("operador"); }
+| < tOPAS : ":=" >		{  LexicoUtils.anyadirToken("operador"); }
+| < tOR : "or" >		{  LexicoUtils.anyadirToken("operador"); }
+| < tAND : "and" >		{  LexicoUtils.anyadirToken("operador"); }
+| < tNOT : "not" >		{  LexicoUtils.anyadirToken("operador"); }
+| < tMOD : "mod" >		{  LexicoUtils.anyadirToken("operador"); }
+| < tDIV : "div" >		{  LexicoUtils.anyadirToken("operador"); }
+}
+
+TOKEN : /* SEPARADORES Y AGRUPADORES */
+{
+  < tPC : ";" >
+| < tC  : "," >
+| < tAP : "(" >
+| < tCP : ")" >
+}
+
+TOKEN : /* TOKENS NO CONSTANTES */
+{
+
+ < tCONSTCHAR : "\"" ~["\""] "\"" >
+| < tCONSTCAD : "\"" (~["\""])* "\"" >
+| < tCONSTENTERA : (< DIGIT >)+ >
+| < tIDENTIFICADOR : (< LETTER >) | ((< LETTER > | "_") (< LETTER > | < DIGIT > |  "_" )* (< LETTER > | < DIGIT >)) >
+  {  LexicoUtils.anyadirToken("identificador"); }
+| < #DIGIT : [ "0"-"9" ] >
+| < #LETTER : [ "a"-"z", "A"-"Z" ] >
+
+}
+
+int one_line() :
+{}
+{
+(
+< tPROGRAMA>
+| < tENTERO >
+| < tBOOLEANO >
+| < tCARACTER >
+| < tTRUE >
+| < tFALSE >
+| < tENTACAR >
+| < tCARAENT >
+| < tACCION > 
+| < tVAL >
+| < tREF >
+| < tESCRIBIR >
+| < tLEER >
+| < tPRINCIPIO >
+| < tFIN >
+| < tSI >
+| < tENT >
+| < tSI_NO >
+| < tFSI >
+| < tMQ >
+| < tFMQ >
+| < tPLUS >
+| < tMINUS >
+| < tMULTIPLY >
+| < tDIVIDE >
+| < tMAYOR >
+| < tMENOR >
+| < tIGUAL >
+| < tMAI >
+| < tMEI >
+| < tNI > 
+| < tOPAS >
+| < tAND >
+| < tOR >
+| < tNOT >
+| < tMOD >
+| < tDIV >
+| < tPC >
+| < tC >
+| < tAP >
+| < tCP >
+| < tIDENTIFICADOR >
+| < tCONSTENTERA >
+| < tCONSTCAD >
+| < tCONSTCHAR >
+| < EOF > { return 1; }
+)+
+}
+
+void programa() :
+{}
+{
+  try {
+  	<tPROGRAMA> <tIDENTIFICADOR> ";"
+  	declaracion_variables() declaracion_acciones() bloque_sentencias() < EOF >
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+    Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void declaracion_variables() :
+{}
+{
+  try {
+  	(declaracion() ";")*
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void declaracion() :
+{}
+{
+  try {
+	tipo_variables() identificadores()
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void tipo_variables() :
+{}
+{
+  try { 
+	  < tENTERO >
+	| < tCARACTER >
+	| < tBOOLEANO >
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void identificadores() :
+{}
+{
+  try {
+    < tIDENTIFICADOR > ("," < tIDENTIFICADOR >)*
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void declaracion_acciones() :
+{}
+{
+  try { 
+  	(declaracion_accion())*
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void declaracion_accion() :
+{}
+{
+  try { 
+	cabecera_accion() ";" declaracion_variables() declaracion_acciones() bloque_sentencias()
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void cabecera_accion() :
+{}
+{
+  try { 
+  	< tACCION > <tIDENTIFICADOR > parametros_formales()
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void parametros_formales() :
+{}
+{
+  try {
+    ("(" parametros() ")")?
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void lista_parametros() :
+{}
+{
+  try {
+    < tIDENTIFICADOR > (";" parametros())*
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void parametros() :
+{}
+{
+  try { 
+  	clase_parametros() tipo_variables() lista_parametros()
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void clase_parametros() :
+{}
+{
+  try {
+    < tVAL >
+    | < tREF >
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void bloque_sentencias() :
+{}
+{
+  try {
+    < tPRINCIPIO > lista_sentencias() < tFIN >
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void lista_sentencias() :
+{}
+{
+  try {
+    (sentencia())*
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void sentencia() :
+{}
+{
+  try {
+	  leer() ";"
+	| escribir() ";"
+	| < tIDENTIFICADOR > (resto_asignacion() | resto_invocacion_accion()) // Hay que factorizar
+	| seleccion()
+	| mientras_que()
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void resto_asignacion() :
+{}
+{
+  try {
+    < tOPAS > expresion() ";"
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void resto_invocacion_accion() :
+{}
+{
+  try {
+    (argumentos())? ";"
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void leer() :
+{}
+{
+  try {
+    < tLEER > "(" lista_asignables() ")"
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void lista_asignables() :
+{}
+{
+  try {
+    < tIDENTIFICADOR > ("," < tIDENTIFICADOR >)*
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void escribir() :
+{}
+{
+  try {
+    < tESCRIBIR >  "(" lista_escribibles()  ("," lista_escribibles())* ")"
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void lista_escribibles() :
+{}
+{
+  try {
+	  < tIDENTIFICADOR >
+	| < tCONSTCHAR >
+	| < tCONSTCAD >
+	| < tENTACAR >  "(" < tCONSTENTERA > ")"
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void asignacion() :
+{}
+{
+  try {
+    < tIDENTIFICADOR > < tOPAS > expresion() ";"
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void invocacion_accion() :
+{}
+{
+  try {
+  	< tIDENTIFICADOR > (argumentos())? ";"
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void mientras_que() :
+{}
+{
+  try {
+  	< tMQ > expresion() lista_sentencias() < tFMQ >
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void seleccion() :
+{}
+{
+  try {
+	< tSI > expresion() < tENT > lista_sentencias()
+	(< tSI_NO > lista_sentencias())*
+	< tFSI >
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void argumentos() :
+{}
+{
+  try {
+    "(" (lista_expresiones())? ")"
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void lista_expresiones() :
+{}
+{
+  try {
+  	(expresion())+
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void expresion() :
+{}
+{
+  try {
+    expresion_simple() (operador_relacional() expresion_simple())*
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void operador_relacional() :
+{}
+{
+  try {
+	  < tMAYOR >
+	| < tMENOR >
+	| < tIGUAL >
+	| < tMAI >
+	| < tMEI >
+	| < tNI >
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void expresion_simple() :
+{}
+{
+  try {
+    termino() (operador_aditivo() termino())* 
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void operador_aditivo() :
+{}
+{
+  try {
+	  "+"
+	| "-"
+	| < tOR >
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void termino() :
+{}
+{
+  try {
+    factor() (operador_multiplicativo() termino())*
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void operador_multiplicativo() :
+{}
+{
+  try {
+	  "*"
+	| "/"
+	| < tDIV >
+	| < tMOD >
+	| < tAND >
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
+
+void factor() :
+{}
+{
+  try {
+  	  "-" factor()
+	| < tNOT > factor()
+	| "(" expresion() ")"
+	| < tENTACAR > "(" expresion() ")"
+	| < tCARAENT > "(" expresion() ")"
+	| < tIDENTIFICADOR >
+	| < tCONSTENTERA >
+	| < tCONSTCHAR >
+	| < tCONSTCAD >
+	| < tTRUE >
+	| < tFALSE >
+  }
+  catch(ParseException e) {
+	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+	Token t;
+    do {
+       t = getNextToken();
+	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+}
