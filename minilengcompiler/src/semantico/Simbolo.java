@@ -76,6 +76,22 @@ public class Simbolo {
 	public boolean es_parametro() {
 		return tipo == Tipo_simbolo.PARAMETRO;
 	}
+	/*
+	public boolean es_entero() {
+		return variable == Tipo_variable.ENTERO;
+	}
+	
+	public boolean es_booleana() {
+		return variable == Tipo_variable.BOOLEANO;
+	}
+	
+	public boolean es_char() {
+		return variable == Tipo_variable.CHAR;
+	}
+	
+	public boolean es_cadena() {
+		return variable == Tipo_variable.CADENA;
+	}*/
 	
 	public boolean es_valor() {
 		return (tipo == Tipo_simbolo.PARAMETRO) && (parametro == Clase_parametro.VAL);
@@ -117,6 +133,14 @@ public class Simbolo {
 		this.visible = visible;
 	}
 	
+	public Tipo_variable getVariable() {
+		return variable;
+	}
+
+	public void setVariable(Tipo_variable tipo) {
+		this.variable = tipo;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {

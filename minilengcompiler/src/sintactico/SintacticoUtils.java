@@ -4,7 +4,7 @@ import main.Token;
 
 public class SintacticoUtils {
 	
-	public static void mostrarErrorSintactico(Token currentToken, int[][] expectedTokenSequences,
+	public static void error_sintactico(Token currentToken, int[][] expectedTokenSequences,
             						String[] tokenImage) {
 			String eol = System.getProperty("line.separator", "\n");
 			StringBuffer expected = new StringBuffer();

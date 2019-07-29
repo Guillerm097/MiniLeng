@@ -10,12 +10,20 @@ options
 PARSER_BEGIN(MiniLeng)
 
 package main;
+import java.util.LinkedList;
 import lexico.LexicoUtils;
 import sintactico.SintacticoUtils;
+import static sintactico.SintacticoUtils.error_sintactico;
+import semantico.*;
+import static semantico.SemanticoUtils.error_semantico;
+import semantico.Simbolo.Tipo_variable;
+import semantico.SemanticoUtils.Tipo_operador;
+import semantico.SemanticoUtils.ExprRegister;
+
 
 public class MiniLeng
 {
-  static LexicoUtils tl = new LexicoUtils();
+  static Tabla_simbolos ts = new Tabla_simbolos();
   
   public static void main(String args []) throws ParseException
   {
@@ -40,7 +48,9 @@ public class MiniLeng
    	try
     {
       //MiniLeng.one_line();
+      
 	  MiniLeng.programa();
+
       if (flagsv) {
         LexicoUtils.mostrarTabla();
       }
@@ -158,7 +168,7 @@ TOKEN : /* TOKENS NO CONSTANTES */
 | < #LETTER : [ "a"-"z", "A"-"Z" ] >
 
 }
-
+/*
 int one_line() :
 {}
 {
@@ -210,17 +220,18 @@ int one_line() :
 | < tCONSTCHAR >
 | < EOF > { return 1; }
 )+
-}
+}*/
 
+// <tPROGRAMA> <tIDENTIFICADOR> ";"
 void programa() :
 {}
 {
   try {
-  	<tPROGRAMA> <tIDENTIFICADOR> ";"
-  	declaracion_variables() declaracion_acciones() bloque_sentencias() < EOF >
+	<tPROGRAMA> <tIDENTIFICADOR> ";"
+	declaracion_variables() declaracion_acciones() bloque_sentencias() < EOF >
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
     Token t;
     do {
@@ -229,6 +240,7 @@ void programa() :
   }
 }
 
+// (declaracion() ";")*
 void declaracion_variables() :
 {}
 {
@@ -236,7 +248,7 @@ void declaracion_variables() :
   	(declaracion() ";")*
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -245,14 +257,18 @@ void declaracion_variables() :
   }
 }
 
+// tipo_variables() identificadores()
 void declaracion() :
-{}
+{
+	Tipo_variable tv;
+}
 {
   try {
-	tipo_variables() identificadores()
+    tv = tipo_variables()
+	identificadores(tv)
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -261,16 +277,20 @@ void declaracion() :
   }
 }
 
-void tipo_variables() :
+/*	  < tENTERO >
+	| < tCARACTER >
+	| < tBOOLEANO >
+*/
+Tipo_variable tipo_variables() :
 {}
 {
   try { 
-	  < tENTERO >
-	| < tCARACTER >
-	| < tBOOLEANO >
+	  < tENTERO > { return Tipo_variable.ENTERO; }
+	| < tCARACTER > { return Tipo_variable.CHAR; }
+	| < tBOOLEANO > { return Tipo_variable.BOOLEANO; }
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -279,22 +299,35 @@ void tipo_variables() :
   }
 }
 
-void identificadores() :
-{}
+// < tIDENTIFICADOR > ("," < tIDENTIFICADOR >)*
+void identificadores(Tipo_variable tipo) :
+{
+  Token t1 = null;
+}
 {
   try {
-    < tIDENTIFICADOR > ("," < tIDENTIFICADOR >)*
+    t1 = < tIDENTIFICADOR >
+    {
+      if(ts.buscar_simbolo(t1.image) == null) {
+		ts.introducir_variable(t1.image, tipo, ts.getNivel(), 0); //TODO: Cambiar el dir
+      }
+    }
+    ("," < tIDENTIFICADOR >)*
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
-
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	
 	Token t;
-    do {
-       t = getNextToken();
+	do {
+	   t = getNextToken();
 	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+  }
+  catch(SimboloNoEncontradoException e) {
+    System.out.println(e);
   }
 }
 
+// (declaracion_accion())*
 void declaracion_acciones() :
 {}
 {
@@ -302,7 +335,7 @@ void declaracion_acciones() :
   	(declaracion_accion())*
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -311,14 +344,22 @@ void declaracion_acciones() :
   }
 }
 
+// cabecera_accion() ";" declaracion_variables() declaracion_acciones() bloque_sentencias()
 void declaracion_accion() :
 {}
 {
   try { 
 	cabecera_accion() ";" declaracion_variables() declaracion_acciones() bloque_sentencias()
+	{
+	  	int nivel = ts.getNivel();
+	  	ts.eliminar_variables(nivel);
+	  	ts.eliminar_acciones(nivel);
+	  	ts.eliminar_parametros_ocultos(nivel + 1);
+		nivel--;
+	}
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -327,14 +368,42 @@ void declaracion_accion() :
   }
 }
 
+// < tACCION > <tIDENTIFICADOR > parametros_formales()
 void cabecera_accion() :
-{}
+{
+  Token to;
+  Simbolo s;
+  boolean ok;
+  LinkedList <Simbolo> lista_param;
+}
 {
   try { 
-  	< tACCION > <tIDENTIFICADOR > parametros_formales()
+  	< tACCION >
+  	to = < tIDENTIFICADOR >
+  	{
+  	  int nivel = ts.getNivel();
+  	  int dir = ts.getDir();
+  	  s = ts.buscar_simbolo(to.image);
+  	  if ((s == null) || (s.getNivel() != nivel)) {
+		ts.introducir_accion(to.image, nivel, dir);
+		ok = true;
+  	  }
+  	  else {
+		error_semantico("Identificador duplicado");
+		ok = false;
+  	  }
+  	}
+  	
+  	lista_param = parametros_formales()
+  	{
+  	  if (ok) {
+  	    s.setLista_parametros(lista_param);	// TODO: ¿Se guardan bien? guardar en la tabla los parametros formales como variables
+  	  }
+  	}
+  	
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -343,14 +412,21 @@ void cabecera_accion() :
   }
 }
 
-void parametros_formales() :
-{}
+// ("(" parametros() ")")?
+LinkedList<Simbolo> parametros_formales() :
+{
+  LinkedList<Simbolo> ls;
+}
 {
   try {
     ("(" parametros() ")")?
+    {
+      	ls = null; // TODO: IR AÑADIENDO CADA PARAMETRO (COMPROBAR MUCHAS COSITAS NAZIS)
+		return ls;
+	}
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -359,6 +435,7 @@ void parametros_formales() :
   }
 }
 
+// < tIDENTIFICADOR > (";" parametros())*
 void lista_parametros() :
 {}
 {
@@ -366,7 +443,7 @@ void lista_parametros() :
     < tIDENTIFICADOR > (";" parametros())*
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -375,6 +452,7 @@ void lista_parametros() :
   }
 }
 
+// clase_parametros() tipo_variables() lista_parametros()
 void parametros() :
 {}
 {
@@ -382,7 +460,7 @@ void parametros() :
   	clase_parametros() tipo_variables() lista_parametros()
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -391,6 +469,10 @@ void parametros() :
   }
 }
 
+/*
+	< tVAL >
+    | < tREF >
+*/
 void clase_parametros() :
 {}
 {
@@ -399,7 +481,7 @@ void clase_parametros() :
     | < tREF >
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -408,6 +490,7 @@ void clase_parametros() :
   }
 }
 
+// < tPRINCIPIO > lista_sentencias() < tFIN >
 void bloque_sentencias() :
 {}
 {
@@ -415,7 +498,7 @@ void bloque_sentencias() :
     < tPRINCIPIO > lista_sentencias() < tFIN >
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -424,6 +507,7 @@ void bloque_sentencias() :
   }
 }
 
+// (sentencia())*
 void lista_sentencias() :
 {}
 {
@@ -431,7 +515,7 @@ void lista_sentencias() :
     (sentencia())*
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -440,6 +524,13 @@ void lista_sentencias() :
   }
 }
 
+/*
+	leer() ";"
+	| escribir() ";"
+	| < tIDENTIFICADOR > (resto_asignacion() | resto_invocacion_accion()) // Hay que factorizar
+	| seleccion()
+	| mientras_que()
+*/
 void sentencia() :
 {}
 {
@@ -451,7 +542,7 @@ void sentencia() :
 	| mientras_que()
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -460,6 +551,7 @@ void sentencia() :
   }
 }
 
+// < tOPAS > expresion() ";"
 void resto_asignacion() :
 {}
 {
@@ -467,7 +559,7 @@ void resto_asignacion() :
     < tOPAS > expresion() ";"
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -476,6 +568,7 @@ void resto_asignacion() :
   }
 }
 
+// (argumentos())? ";"
 void resto_invocacion_accion() :
 {}
 {
@@ -483,7 +576,7 @@ void resto_invocacion_accion() :
     (argumentos())? ";"
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -492,6 +585,7 @@ void resto_invocacion_accion() :
   }
 }
 
+// < tLEER > "(" lista_asignables() ")"
 void leer() :
 {}
 {
@@ -499,7 +593,7 @@ void leer() :
     < tLEER > "(" lista_asignables() ")"
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -508,6 +602,7 @@ void leer() :
   }
 }
 
+// < tIDENTIFICADOR > ("," < tIDENTIFICADOR >)*
 void lista_asignables() :
 {}
 {
@@ -515,7 +610,7 @@ void lista_asignables() :
     < tIDENTIFICADOR > ("," < tIDENTIFICADOR >)*
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -524,6 +619,7 @@ void lista_asignables() :
   }
 }
 
+//  tESCRIBIR >  "(" lista_escribibles()  ("," lista_escribibles())* ")"
 void escribir() :
 {}
 {
@@ -531,7 +627,7 @@ void escribir() :
     < tESCRIBIR >  "(" lista_escribibles()  ("," lista_escribibles())* ")"
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -540,6 +636,12 @@ void escribir() :
   }
 }
 
+/*
+	< tIDENTIFICADOR >
+	| < tCONSTCHAR >
+	| < tCONSTCAD >
+	| < tENTACAR >  "(" < tCONSTENTERA > ")"
+*/
 void lista_escribibles() :
 {}
 {
@@ -550,7 +652,7 @@ void lista_escribibles() :
 	| < tENTACAR >  "(" < tCONSTENTERA > ")"
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -559,6 +661,7 @@ void lista_escribibles() :
   }
 }
 
+// < tIDENTIFICADOR > < tOPAS > expresion() ";"
 void asignacion() :
 {}
 {
@@ -566,7 +669,7 @@ void asignacion() :
     < tIDENTIFICADOR > < tOPAS > expresion() ";"
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -575,6 +678,7 @@ void asignacion() :
   }
 }
 
+// < tIDENTIFICADOR > (argumentos())? ";"
 void invocacion_accion() :
 {}
 {
@@ -582,7 +686,7 @@ void invocacion_accion() :
   	< tIDENTIFICADOR > (argumentos())? ";"
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -591,6 +695,7 @@ void invocacion_accion() :
   }
 }
 
+// < tMQ > expresion() lista_sentencias() < tFMQ >
 void mientras_que() :
 {}
 {
@@ -598,7 +703,7 @@ void mientras_que() :
   	< tMQ > expresion() lista_sentencias() < tFMQ >
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -607,6 +712,11 @@ void mientras_que() :
   }
 }
 
+/*
+	< tSI > expresion() < tENT > lista_sentencias()
+	(< tSI_NO > lista_sentencias())*
+	< tFSI >
+*/
 void seleccion() :
 {}
 {
@@ -616,7 +726,7 @@ void seleccion() :
 	< tFSI >
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -625,6 +735,7 @@ void seleccion() :
   }
 }
 
+// "(" (lista_expresiones())? ")"
 void argumentos() :
 {}
 {
@@ -632,7 +743,7 @@ void argumentos() :
     "(" (lista_expresiones())? ")"
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -641,6 +752,7 @@ void argumentos() :
   }
 }
 
+// (expresion())+
 void lista_expresiones() :
 {}
 {
@@ -648,7 +760,7 @@ void lista_expresiones() :
   	(expresion())+
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -657,14 +769,108 @@ void lista_expresiones() :
   }
 }
 
-void expresion() :
-{}
+// expresion_simple() (operador_relacional() expresion_simple())*
+ExprRegister expresion() :
+{
+  ExprRegister exprIzq, exprDer, resultado;
+  Tipo_variable varExprIzq, varExprDer;
+  Tipo_operador op;
+  boolean ok;
+}
 {
   try {
-    expresion_simple() (operador_relacional() expresion_simple())*
+    exprIzq = expresion_simple()
+    op = operador_relacional()
+    exprDer = expresion_simple()
+    {
+      	resultado = new ExprRegister();
+		varExprIzq = exprIzq.tipo;
+      	varExprDer = exprDer.tipo;
+      	
+  	  	ok = true;
+		switch(op) {
+	  		case SUMA:
+	  			if ((varExprIzq != Tipo_variable.ENTERO)
+	  				&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
+	  				error_semantico("El miembro izquierdo de la expresión debería ser de tipo entero");
+					ok = false;
+	  			}
+	
+				if ((varExprDer != Tipo_variable.ENTERO)
+	  				&& (varExprDer != Tipo_variable.DESCONOCIDO)) {
+					error_semantico("El miembro derecho de la expresión debería ser de tipo entero");
+					ok = false;
+	  			}
+	
+	  			if (ok) {
+	  			  	if ((varExprDer == Tipo_variable.ENTERO)
+	  			  	  	&& (varExprIzq == Tipo_variable.ENTERO)) {
+		  			  	resultado.val_entero = exprIzq.val_entero + exprDer.val_entero;
+						resultado.tipo = Tipo_variable.ENTERO;
+					}
+					else {
+						resultado.tipo = Tipo_variable.DESCONOCIDO;
+					}
+	  			}
+	  			
+	  			return resultado;
+	  			
+	  		case RESTA:
+				if ((varExprIzq != Tipo_variable.ENTERO)
+	  				&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
+	  				error_semantico("El miembro izquierdo de la expresión debería ser de tipo entero");
+					ok = false;
+	  			}
+	
+				if ((varExprDer != Tipo_variable.ENTERO)
+	  				&& (varExprDer != Tipo_variable.DESCONOCIDO)) {
+					error_semantico("El miembro derecho de la expresión debería ser de tipo entero");
+					ok = false;
+	  			}
+	
+	  			if (ok) {
+	  			  	if ((varExprDer == Tipo_variable.ENTERO)
+	  			  	  	&& (varExprIzq == Tipo_variable.ENTERO)) {
+		  			  	resultado.val_entero = exprIzq.val_entero - exprDer.val_entero;
+						resultado.tipo = Tipo_variable.ENTERO;
+					}
+					else {
+						resultado.tipo = Tipo_variable.DESCONOCIDO;
+					}
+	  			}
+	  			
+	  			return resultado;
+	
+	  		case OR:
+				if ((varExprIzq != Tipo_variable.BOOLEANO)
+	  				&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
+	  				error_semantico("El miembro izquierdo de la expresión debería ser de tipo booleano");
+					ok = false;
+	  			}
+	
+				if ((varExprDer != Tipo_variable.BOOLEANO)
+	  				&& (varExprDer != Tipo_variable.DESCONOCIDO)) {
+					error_semantico("El miembro derecho de la expresión debería ser de tipo booleano");
+					ok = false;
+	  			}
+	
+	  			if (ok) {
+	  			  	if ((varExprDer == Tipo_variable.BOOLEANO)
+	  			  	  	&& (varExprIzq == Tipo_variable.BOOLEANO)) {
+		  			  	resultado.val_booleano = exprIzq.val_booleano | exprDer.val_booleano;
+						resultado.tipo = Tipo_variable.BOOLEANO;
+					}
+					else {
+						resultado.tipo = Tipo_variable.DESCONOCIDO;
+					}
+	  			}
+	  			
+	  			return resultado;	
+      	}
+    }
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -673,6 +879,14 @@ void expresion() :
   }
 }
 
+/*
+	  < tMAYOR >
+	| < tMENOR >
+	| < tIGUAL >
+	| < tMAI >
+	| < tMEI >
+	| < tNI >
+*/
 void operador_relacional() :
 {}
 {
@@ -685,7 +899,7 @@ void operador_relacional() :
 	| < tNI >
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -694,14 +908,109 @@ void operador_relacional() :
   }
 }
 
-void expresion_simple() :
-{}
+// termino() (operador_aditivo() termino())* 
+ExprRegister expresion_simple() :
+{
+  ExprRegister exprIzq, exprDer, resultado;
+  Tipo_operador op;
+  boolean ok;
+}
 {
   try {
-    termino() (operador_aditivo() termino())* 
+    exprIzq =termino()
+    (
+      op =operador_aditivo()
+      exprDer = termino()
+    )*
+    {
+      	resultado = new ExprRegister();
+		varExprIzq = exprIzq.tipo;
+      	varExprDer = exprDer.tipo;
+      	
+  	  	ok = true;
+		switch(op) {
+	  		case SUMA:
+	  			if ((varExprIzq != Tipo_variable.ENTERO)
+	  				&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
+	  				error_semantico("El miembro izquierdo de la expresión debería ser de tipo entero");
+					ok = false;
+	  			}
+	
+				if ((varExprDer != Tipo_variable.ENTERO)
+	  				&& (varExprDer != Tipo_variable.DESCONOCIDO)) {
+					error_semantico("El miembro derecho de la expresión debería ser de tipo entero");
+					ok = false;
+	  			}
+	
+	  			if (ok) {
+	  			  	if ((varExprDer == Tipo_variable.ENTERO)
+	  			  	  	&& (varExprIzq == Tipo_variable.ENTERO)) {
+		  			  	resultado.val_entero = exprIzq.val_entero + exprDer.val_entero;
+						resultado.tipo = Tipo_variable.ENTERO;
+					}
+					else {
+						resultado.tipo = Tipo_variable.DESCONOCIDO;
+					}
+	  			}
+	  			
+	  			return resultado;
+	  			
+	  		case RESTA:
+				if ((varExprIzq != Tipo_variable.ENTERO)
+	  				&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
+	  				error_semantico("El miembro izquierdo de la expresión debería ser de tipo entero");
+					ok = false;
+	  			}
+	
+				if ((varExprDer != Tipo_variable.ENTERO)
+	  				&& (varExprDer != Tipo_variable.DESCONOCIDO)) {
+					error_semantico("El miembro derecho de la expresión debería ser de tipo entero");
+					ok = false;
+	  			}
+	
+	  			if (ok) {
+	  			  	if ((varExprDer == Tipo_variable.ENTERO)
+	  			  	  	&& (varExprIzq == Tipo_variable.ENTERO)) {
+		  			  	resultado.val_entero = exprIzq.val_entero - exprDer.val_entero;
+						resultado.tipo = Tipo_variable.ENTERO;
+					}
+					else {
+						resultado.tipo = Tipo_variable.DESCONOCIDO;
+					}
+	  			}
+	  			
+	  			return resultado;
+	
+	  		case OR:
+				if ((varExprIzq != Tipo_variable.BOOLEANO)
+	  				&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
+	  				error_semantico("El miembro izquierdo de la expresión debería ser de tipo booleano");
+					ok = false;
+	  			}
+	
+				if ((varExprDer != Tipo_variable.BOOLEANO)
+	  				&& (varExprDer != Tipo_variable.DESCONOCIDO)) {
+					error_semantico("El miembro derecho de la expresión debería ser de tipo booleano");
+					ok = false;
+	  			}
+	
+	  			if (ok) {
+	  			  	if ((varExprDer == Tipo_variable.BOOLEANO)
+	  			  	  	&& (varExprIzq == Tipo_variable.BOOLEANO)) {
+		  			  	resultado.val_booleano = exprIzq.val_booleano | exprDer.val_booleano;
+						resultado.tipo = Tipo_variable.BOOLEANO;
+					}
+					else {
+						resultado.tipo = Tipo_variable.DESCONOCIDO;
+					}
+	  			}
+	  			
+	  			return resultado;
+      	}
+    }
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -710,16 +1019,21 @@ void expresion_simple() :
   }
 }
 
-void operador_aditivo() :
-{}
-{
-  try {
+/*
 	  "+"
 	| "-"
 	| < tOR >
+*/
+Tipo_operador operador_aditivo() :
+{}
+{
+  try {
+	  "+" 		{ return Tipo_operador.SUMA; }
+	| "-"		{ return Tipo_operador.RESTA; }
+	| < tOR >	{ return Tipo_operador.OR; }
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -728,14 +1042,15 @@ void operador_aditivo() :
   }
 }
 
+// factor() (operador_multiplicativo() termino())*
 void termino() :
 {}
 {
   try {
-    factor() (operador_multiplicativo() termino())*
+    factor() (operador_multiplicativo() factor())* // TODO: El ultimo es factor() o termino(); DIAP 21, SEMANTICO III
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -744,6 +1059,13 @@ void termino() :
   }
 }
 
+/*
+	  "*"
+	| "/"
+	| < tDIV >
+	| < tMOD >
+	| < tAND >
+*/
 void operador_multiplicativo() :
 {}
 {
@@ -755,7 +1077,7 @@ void operador_multiplicativo() :
 	| < tAND >
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {
@@ -764,11 +1086,8 @@ void operador_multiplicativo() :
   }
 }
 
-void factor() :
-{}
-{
-  try {
-  	  "-" factor()
+/*
+ "-" factor()
 	| < tNOT > factor()
 	| "(" expresion() ")"
 	| < tENTACAR > "(" expresion() ")"
@@ -779,9 +1098,106 @@ void factor() :
 	| < tCONSTCAD >
 	| < tTRUE >
 	| < tFALSE >
+*/
+ExprRegister factor() :
+{
+  ExprRegister tpFactor, tpExpr, tpID, resultado;
+  Token to;
+  Simbolo s;
+}
+{
+  try {
+	  < tNOT > tpFactor = factor()
+	  {
+		if ((tpFactor.tipo != Tipo_variable.BOOLEANO)
+			&& (tpFactor.tipo != Tipo_variable.DESCONOCIDO)) {
+			error_semantico("Tipo incompatible. Se esperaba booleano");
+		}
+
+		// resultado.val_booleano = Boolean.parseBoolean(tpFactor.val_booleano); TODO?
+		resultado.tipo  = Tipo_variable.BOOLEANO;
+		return resultado;
+	  }
+	  
+	| "-" tpFactor = factor()
+	{
+		if ((tpFactor.tipo != Tipo_variable.ENTERO)
+			&& (tpFactor.tipo != Tipo_variable.DESCONOCIDO)) {
+			error_semantico("Tipo incompatible. Se esperaba entero");
+		}
+		
+		// resultado.val_entero = Integer.parseInteger(tpFactor.val_entero); TODO?
+		resultado.tipo = Tipo_variable.ENTERO;
+		return resultado;
+	}
+	| "(" tpExpr = expresion() ")"
+	{
+	  	return tpExpr;
+	}
+	| < tENTACAR > "(" tpExpr = expresion() ")"
+	{
+	  	if ((tpExpr.tipo != Tipo_variable.ENTERO)
+	  		&& (tpExpr.tipo != Tipo_variable.DESCONOCIDO)) {
+	  	  	error_semantico("Tipo incompatible. Se esperaba un entero para convertirlo a caracter");
+	 	}
+
+		resultado.val_char = (char)tpExpr.val_entero; // TODO: Convertir ya a caracter?????
+	 	resultado.tipo = Tipo_variable.CHAR;
+	 	return resultado;
+	}
+	| < tCARAENT > "(" expresion() ")"
+	{
+	  	if ((tpExpr.tipo != Tipo_variable.CHAR)
+	  		&& (tpFactor.tipo != Tipo_variable.DESCONOCIDO)) {
+	  	  	error_semantico("Tipo incompatible. Se esperaba un caracter para convertirlo a entero");
+	 	}
+
+	 	resultado.val_entero = (int)tpExpr.val_char; // TODO: Convertir ya a entero?????
+	 	resultado.tipo = Tipo_variable.ENTERO;
+	 	return resultado;
+	}
+	| to = < tIDENTIFICADOR >
+	{
+	  	s = ts.buscar_simbolo(to.image);
+		
+	  	if (s == null) {  // TODO: CAMBIAR PARA HANDELEAR EXCEPCIONES
+	  		error_semantico("Identificador desconocido");
+	  		tpID.tipo = Tipo_variable.DESCONOCIDO;
+	 	}
+	 	else {
+	 	  	tpID.tipo = s.getVariable();
+		}
+		
+		return tpID;
+	}
+	| to = < tCONSTENTERA >
+	{
+	  	resultado.val_entero = Integer.parseInt(to.image);
+	  	resultado.tipo.ENTERO;
+	  	return resultado;
+	}
+	| to = < tCONSTCHAR >
+	{
+	  	resultado.val_char = to.image.charAt(0);
+	  	resultado.tipo.CHAR;
+	  	return resultado;
+	}
+	| < tCONSTCAD > // TODO: Restricción semántica?? Pasar tipo?
+	| to = < tTRUE >
+	{
+	  	resultado.val_booleano = Boolean.parseBoolean(to.image);
+		resultado.tipo  = Tipo_variable.BOOLEANO;
+		return resultado;
+	}
+	| < tFALSE > // TODO: (Factorizacion): Ver si se puede escribir una sola vez para TRUE y FALSE
+	{
+	  	resultado.val_booleano = Boolean.parseBoolean(to.image);
+		resultado.tipo  = Tipo_variable.BOOLEANO;
+		return resultado;
+	}
   }
   catch(ParseException e) {
-	SintacticoUtils.mostrarErrorSintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 	Token t;
     do {

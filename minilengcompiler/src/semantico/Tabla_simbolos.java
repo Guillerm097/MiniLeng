@@ -1,8 +1,8 @@
 package semantico;
 
 import java.util.*;
-
 import semantico.Simbolo.Tipo_variable;
+import semantico.Simbolo.Clase_parametro;
 
 public class Tabla_simbolos {
 		
@@ -12,7 +12,7 @@ public class Tabla_simbolos {
 		}
 		public void setSim(Simbolo s) {
 			this.s = s;
-		}		
+		}
 		
 		Simbolo s;
 		LinkedList<Simbolo> lista_colisiones = new LinkedList<Simbolo>();
@@ -20,15 +20,18 @@ public class Tabla_simbolos {
 	
 	int nivel; // Nivel actual
 	int tam; // Tamaño de la tabla
+	int dir; // TODO: Direccion actual?
 	nodoTabla[] tabla;
 	static Integer[] TP; // Tabla de permutaciones
-	
+
 	public Tabla_simbolos() {
+		nivel = 0;
 		tam = 256; // TODO: Ajustar valor
 		tabla = new nodoTabla[tam];
 	}
 	
 	public Tabla_simbolos(int tamanyo) {
+		nivel = 0;
 		tam = tamanyo;
 		tabla = new nodoTabla[tam];
 	}
@@ -89,7 +92,7 @@ public class Tabla_simbolos {
 		return s;
 	}
 	
-	public Simbolo introducir_variable(String nombre, Simbolo.Tipo_variable variable, int nivel, int dir) {
+	public Simbolo introducir_variable(String nombre, Tipo_variable variable, int nivel, int dir) {
 		Simbolo s = new Simbolo();
 		s.introducir_variable(nombre, variable, nivel, dir);
 		int pos = hash(nombre);
@@ -126,7 +129,7 @@ public class Tabla_simbolos {
 	}
 	
 	public Simbolo introducir_parametro(String nombre, Simbolo.Tipo_variable variable, 
-										Simbolo.Clase_parametro parametro, int nivel, int dir) {
+										Clase_parametro parametro, int nivel, int dir) {
 		Simbolo s = new Simbolo();
 		s.introducir_parametro(nombre, variable, parametro, nivel, dir);		
 		int pos = hash(nombre);
@@ -235,7 +238,7 @@ public class Tabla_simbolos {
 		for(nodoTabla nt : tabla) {
 			if((nt.getSim().es_accion()) && (nt.getSim().getNivel() == nivel)){
 				LinkedList<Simbolo> lp = nt.s.getLista_parametros();
-				eliminar_parametros_acciones(nt.s.getLista_parametros());
+				eliminar_parametros_acciones(lp);
 				nt.s = null;
 			}
 			
@@ -290,7 +293,24 @@ public class Tabla_simbolos {
 		return h;
 	}
 	
-	public static void main(String[] args){		
+	public int getNivel() {
+		return nivel;
+	}
+
+	public void setNivel(int nivel) {
+		this.nivel = nivel;
+	}
+
+	public int getDir() {
+		return dir;
+	}
+
+	public void setDir(int dir) {
+		this.dir = dir;
+	}
+	
+	public static void main(String[] args){
+		// TEST
 		Tabla_simbolos ts = new Tabla_simbolos();
 		ts.inicializar_tabla();
 		ts.introducir_variable("prueba", Tipo_variable.CADENA, 0, 0);
