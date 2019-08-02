@@ -1,0 +1,10 @@
+COSILLAS HECHAS:
+Panic mode implementado.
+Overwrite de métodos equals y hash de la clase símbolos para poder buscar posteriormente en la tabla de símbolos.
+Implementación hash con Pearson.
+Se ha utilizado excepciones en vez de punteros nulos, se han utilizado excepciones como mecanismo de tratamiento de errores semánticos.
+
+DUDAS:
+Guardo cada parámetro como una variable única?
+Guardo la lista de parámetros como un atributo del símbolo acción? SI
+Dos parámetros pueden tener el mismo nombre mientras sean de diferente tipo? Si estan en el mismo nivel NO

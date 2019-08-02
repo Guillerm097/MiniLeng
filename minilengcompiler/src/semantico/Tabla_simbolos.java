@@ -2,6 +2,8 @@ package semantico;
 
 import java.util.*;
 import semantico.Simbolo.Tipo_variable;
+import semantico.excepciones.SemanticException;
+import semantico.excepciones.SimboloNoEncontradoException;
 import semantico.Simbolo.Clase_parametro;
 
 public class Tabla_simbolos {

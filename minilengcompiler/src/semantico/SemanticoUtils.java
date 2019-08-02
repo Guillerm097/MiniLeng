@@ -8,7 +8,13 @@ public class SemanticoUtils {
 	public enum Tipo_operador {
 		SUMA,
 		RESTA,
-		OR
+		OR,
+		MAYOR,
+		MENOR,
+		IGUAL,
+		MAI,
+		MEI,
+		NI
 	}
 	
 	// Mostrar error semántico sálida estándar y error

@@ -3,8 +3,8 @@
  */
 options
 {
-  ignore_case = true;
-  static = true;
+	ignore_case = true;
+	static = true;
 }
 
 PARSER_BEGIN(MiniLeng)
@@ -16,51 +16,50 @@ import sintactico.SintacticoUtils;
 import static sintactico.SintacticoUtils.error_sintactico;
 import semantico.*;
 import static semantico.SemanticoUtils.error_semantico;
+import semantico.excepciones.*;
 import semantico.Simbolo.Tipo_variable;
+import semantico.Simbolo.Clase_parametro;
 import semantico.SemanticoUtils.Tipo_operador;
 import semantico.SemanticoUtils.ExprRegister;
 
 
 public class MiniLeng
 {
-  static Tabla_simbolos ts = new Tabla_simbolos();
-  
-  public static void main(String args []) throws ParseException
-  {
-    MiniLeng parser;
-
-	//boolean flagsv = args[args.length - 2].equals("flags") && args[args.length - 1].equals("-v");
-	boolean flagsv = false;
-    
-    if (args.length == 0 || (args.length == 2 && flagsv)) {
-      parser = new MiniLeng(System.in);
-  	}
-  	else if (args.length == 1 || (args.length == 3 && flagsv)) {
-  	  try {
-          parser = new MiniLeng(new java.io.FileInputStream(args[0]));
-      }
-      catch(java.io.FileNotFoundException e) {
-        System.out.println ("MiniLeng: The file " + args[0] + " was not found.");
-        return;
-      }
-	}
-	      
-   	try
-    {
-      //MiniLeng.one_line();
-      
-	  MiniLeng.programa();
-
-      if (flagsv) {
-        LexicoUtils.mostrarTabla();
-      }
-   	}
-    catch (Error e) { // ERRORES LEXICOS
-      	LexicoUtils.mostrarErrorLexico(MiniLengTokenManager.input_stream.getBeginLine(),
-      									MiniLengTokenManager.input_stream.getBeginColumn(),
-      									MiniLengTokenManager.curChar);
-    }
-  }  
+	static Tabla_simbolos ts = new Tabla_simbolos();
+	
+	public static void main(String args []) throws ParseException
+	{
+		MiniLeng parser;
+		
+		//boolean flagsv = args[args.length - 2].equals("flags") && args[args.length - 1].equals("-v");
+		boolean flagsv = false;
+		if (args.length == 0 || (args.length == 2 && flagsv)) {
+			parser = new MiniLeng(System.in);
+		}
+		else if (args.length == 1 || (args.length == 3 && flagsv)) {
+			try {
+				parser = new MiniLeng(new java.io.FileInputStream(args[0] + ".ml"));
+			}
+			catch(java.io.FileNotFoundException e) {
+				System.out.println ("MiniLeng: The file " + args[0] + ".ml" + " was not found.");
+				return;
+			}
+		}
+		
+		try
+		{
+			//MiniLeng.one_line();
+			MiniLeng.programa();
+			if (flagsv) {
+				LexicoUtils.mostrarTabla();
+			}
+		}// ERRORES LEXICOS
+		catch (Error e) {
+			LexicoUtils.mostrarErrorLexico(MiniLengTokenManager.input_stream.getBeginLine(),
+										MiniLengTokenManager.input_stream.getBeginColumn(),
+										MiniLengTokenManager.curChar);
+		}
+	}  
 }
 
 
@@ -68,104 +67,104 @@ PARSER_END(MiniLeng)
 
 SKIP :
 {
-  " "
-| "%%" : WithinBlockComment
-| "%" : WithinLineComment
-| "\r"
-| "\t"
-| "\n"
+	" "
+	| "%%" : WithinBlockComment
+	| "%" : WithinLineComment
+	| "\r"
+	| "\t"
+	| "\n"
 }
 
 <WithinBlockComment> SKIP :
 {
-  "%%" : DEFAULT
+	"%%" : DEFAULT
 }
 
 <WithinBlockComment> MORE :
 {
-  < ~[] >
+	< ~[] >
 }
 
 <WithinLineComment> SKIP :
 {
-  "\n" : DEFAULT
+	"\n" : DEFAULT
 }
 
 <WithinLineComment> MORE :
 {
-  < ~[] >
+	< ~[] >
 }
 
 TOKEN: /* PALABRAS RESERVADAS */
 {
-  < tVAL : "val" >			 {  LexicoUtils.anyadirToken("palabra reservada"); }
-| < tREF : "ref" > 			 {  LexicoUtils.anyadirToken("palabra reservada"); }
-| < tLEER : "leer" >		 {  LexicoUtils.anyadirToken("palabra reservada"); }
-| < tTRUE : "true" >		 {  LexicoUtils.anyadirToken("palabra reservada"); }
-| < tFALSE : "false" >		 {  LexicoUtils.anyadirToken("palabra reservada"); }
-| < tACCION : "accion" >	 {  LexicoUtils.anyadirToken("palabra reservada"); }
-| < tENTERO : "entero" >	 {  LexicoUtils.anyadirToken("palabra reservada");
-								LexicoUtils.anyadirToken("entero"); 			  }
-| < tENTACAR : "entacar" >	 {  LexicoUtils.anyadirToken("palabra reservada"); }
-| < tCARAENT : "caraent" > 	 {  LexicoUtils.anyadirToken("palabra reservada"); }	
-| < tBOOLEANO : "booleano" > {  LexicoUtils.anyadirToken("palabra reservada");
-								LexicoUtils.anyadirToken("booleano"); 		  }
-| < tCARACTER : "caracter" > {  LexicoUtils.anyadirToken("palabra reservada");
-								LexicoUtils.anyadirToken("caracter"); 		  }
-| < tESCRIBIR : "escribir" > {  LexicoUtils.anyadirToken("palabra reservada"); }
-| < tPROGRAMA : "programa" > {  LexicoUtils.anyadirToken("palabra reservada"); }
+	  < tVAL : "val" >			 {  LexicoUtils.anyadirToken("palabra reservada"); }
+	| < tREF : "ref" > 			 {  LexicoUtils.anyadirToken("palabra reservada"); }
+	| < tLEER : "leer" >		 {  LexicoUtils.anyadirToken("palabra reservada"); }
+	| < tTRUE : "true" >		 {  LexicoUtils.anyadirToken("palabra reservada"); }
+	| < tFALSE : "false" >		 {  LexicoUtils.anyadirToken("palabra reservada"); }
+	| < tACCION : "accion" >	 {  LexicoUtils.anyadirToken("palabra reservada"); }
+	| < tENTERO : "entero" >	 {  LexicoUtils.anyadirToken("palabra reservada");
+									LexicoUtils.anyadirToken("entero"); 			  }
+	| < tENTACAR : "entacar" >	 {  LexicoUtils.anyadirToken("palabra reservada"); }
+	| < tCARAENT : "caraent" > 	 {  LexicoUtils.anyadirToken("palabra reservada"); }	
+	| < tBOOLEANO : "booleano" > {  LexicoUtils.anyadirToken("palabra reservada");
+									LexicoUtils.anyadirToken("booleano"); 		  }
+	| < tCARACTER : "caracter" > {  LexicoUtils.anyadirToken("palabra reservada");
+									LexicoUtils.anyadirToken("caracter"); 		  }
+	| < tESCRIBIR : "escribir" > {  LexicoUtils.anyadirToken("palabra reservada"); }
+	| < tPROGRAMA : "programa" > {  LexicoUtils.anyadirToken("palabra reservada"); }
 }
 
 TOKEN : /* PALABRAS RESERVADAS CONTROL FLUJO */
 {
-  < tSI : "si" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
-| < tMQ : "mq" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
-| < tFIN : "fin" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
-| < tENT : "ent" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
-| < tFSI : "fsi" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
-| < tFMQ : "fmq" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
-| < tSI_NO : "si_no" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
-| < tPRINCIPIO : "principio" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
+	  < tSI : "si" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
+	| < tMQ : "mq" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
+	| < tFIN : "fin" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
+	| < tENT : "ent" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
+	| < tFSI : "fsi" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
+	| < tFMQ : "fmq" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
+	| < tSI_NO : "si_no" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
+	| < tPRINCIPIO : "principio" >	{  LexicoUtils.anyadirToken("palabra reservada"); }
 }
 
 TOKEN : /* OPERATORS */
 {
-  < tPLUS : "+" >		{  LexicoUtils.anyadirToken("operador"); }
-| < tMINUS : "-" >		{  LexicoUtils.anyadirToken("operador"); }
-| < tMULTIPLY : "*" >	{  LexicoUtils.anyadirToken("operador"); }
-| < tDIVIDE : "/" >		{  LexicoUtils.anyadirToken("operador"); }
-| < tMAYOR : ">" >		{  LexicoUtils.anyadirToken("operador"); }
-| < tMENOR : "<" >		{  LexicoUtils.anyadirToken("operador"); }
-| < tIGUAL : "=" >		{  LexicoUtils.anyadirToken("operador"); }
-| < tMAI : ">=" >		{  LexicoUtils.anyadirToken("operador"); }
-| < tMEI : "<=" >		{  LexicoUtils.anyadirToken("operador"); }
-| < tNI : "<>" > 		{  LexicoUtils.anyadirToken("operador"); }
-| < tOPAS : ":=" >		{  LexicoUtils.anyadirToken("operador"); }
-| < tOR : "or" >		{  LexicoUtils.anyadirToken("operador"); }
-| < tAND : "and" >		{  LexicoUtils.anyadirToken("operador"); }
-| < tNOT : "not" >		{  LexicoUtils.anyadirToken("operador"); }
-| < tMOD : "mod" >		{  LexicoUtils.anyadirToken("operador"); }
-| < tDIV : "div" >		{  LexicoUtils.anyadirToken("operador"); }
+	  < tPLUS : "+" >		{  LexicoUtils.anyadirToken("operador"); }
+	| < tMINUS : "-" >		{  LexicoUtils.anyadirToken("operador"); }
+	| < tMULTIPLY : "*" >	{  LexicoUtils.anyadirToken("operador"); }
+	| < tDIVIDE : "/" >		{  LexicoUtils.anyadirToken("operador"); }
+	| < tMAYOR : ">" >		{  LexicoUtils.anyadirToken("operador"); }
+	| < tMENOR : "<" >		{  LexicoUtils.anyadirToken("operador"); }
+	| < tIGUAL : "=" >		{  LexicoUtils.anyadirToken("operador"); }
+	| < tMAI : ">=" >		{  LexicoUtils.anyadirToken("operador"); }
+	| < tMEI : "<=" >		{  LexicoUtils.anyadirToken("operador"); }
+	| < tNI : "<>" > 		{  LexicoUtils.anyadirToken("operador"); }
+	| < tOPAS : ":=" >		{  LexicoUtils.anyadirToken("operador"); }
+	| < tOR : "or" >		{  LexicoUtils.anyadirToken("operador"); }
+	| < tAND : "and" >		{  LexicoUtils.anyadirToken("operador"); }
+	| < tNOT : "not" >		{  LexicoUtils.anyadirToken("operador"); }
+	| < tMOD : "mod" >		{  LexicoUtils.anyadirToken("operador"); }
+	| < tDIV : "div" >		{  LexicoUtils.anyadirToken("operador"); }
 }
 
 TOKEN : /* SEPARADORES Y AGRUPADORES */
 {
-  < tPC : ";" >
-| < tC  : "," >
-| < tAP : "(" >
-| < tCP : ")" >
+	  < tPC : ";" >
+	| < tC  : "," >
+	| < tAP : "(" >
+	| < tCP : ")" >
 }
 
 TOKEN : /* TOKENS NO CONSTANTES */
 {
 
- < tCONSTCHAR : "\"" ~["\""] "\"" >
-| < tCONSTCAD : "\"" (~["\""])* "\"" >
-| < tCONSTENTERA : (< DIGIT >)+ >
-| < tIDENTIFICADOR : (< LETTER >) | ((< LETTER > | "_") (< LETTER > | < DIGIT > |  "_" )* (< LETTER > | < DIGIT >)) >
-  {  LexicoUtils.anyadirToken("identificador"); }
-| < #DIGIT : [ "0"-"9" ] >
-| < #LETTER : [ "a"-"z", "A"-"Z" ] >
+	  < tCONSTCHAR : "\"" ~["\""] "\"" >
+	| < tCONSTCAD : "\"" (~["\""])* "\"" >
+	| < tCONSTENTERA : (< DIGIT >)+ >
+	| < tIDENTIFICADOR : (< LETTER >) | ((< LETTER > | "_") (< LETTER > | < DIGIT > |  "_" )* (< LETTER > | < DIGIT >)) >
+	  {  LexicoUtils.anyadirToken("identificador"); }
+	| < #DIGIT : [ "0"-"9" ] >
+	| < #LETTER : [ "a"-"z", "A"-"Z" ] >
 
 }
 /*
@@ -226,55 +225,56 @@ int one_line() :
 void programa() :
 {}
 {
-  try {
-	<tPROGRAMA> <tIDENTIFICADOR> ";"
-	declaracion_variables() declaracion_acciones() bloque_sentencias() < EOF >
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		< tPROGRAMA > < tIDENTIFICADOR > ";"
+		declaracion_variables() declaracion_acciones() bloque_sentencias() < EOF >
+  	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-    Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // (declaracion() ";")*
 void declaracion_variables() :
 {}
 {
-  try {
-  	(declaracion() ";")*
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		(declaracion() ";")*
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
+	catch(SimboloNoEncontradoException e) {
+
+	}
 }
 
 // tipo_variables() identificadores()
 void declaracion() :
+{}
 {
-	Tipo_variable tv;
-}
-{
-  try {
-    tv = tipo_variables()
-	identificadores(tv)
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		tv = tipo_variables()
+		identificadores(tv)
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 /*	  < tENTERO >
@@ -284,244 +284,255 @@ void declaracion() :
 Tipo_variable tipo_variables() :
 {}
 {
-  try { 
-	  < tENTERO > { return Tipo_variable.ENTERO; }
-	| < tCARACTER > { return Tipo_variable.CHAR; }
-	| < tBOOLEANO > { return Tipo_variable.BOOLEANO; }
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try { 
+		  < tENTERO > { return Tipo_variable.ENTERO; }
+		| < tCARACTER > { return Tipo_variable.CHAR; }
+		| < tBOOLEANO > { return Tipo_variable.BOOLEANO; }
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // < tIDENTIFICADOR > ("," < tIDENTIFICADOR >)*
 void identificadores(Tipo_variable tipo) :
 {
-  Token t1 = null;
+	Token t1 = null;
 }
 {
-  try {
-    t1 = < tIDENTIFICADOR >
-    {
-      if(ts.buscar_simbolo(t1.image) == null) {
-		ts.introducir_variable(t1.image, tipo, ts.getNivel(), 0); //TODO: Cambiar el dir
-      }
-    }
-    ("," < tIDENTIFICADOR >)*
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
-	
-	Token t;
-	do {
-	   t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
-  catch(SimboloNoEncontradoException e) {
-    System.out.println(e);
-  }
+  	try {
+		t1 = < tIDENTIFICADOR >
+		{
+			ts.introducir_variable(t1.image, tipo, ts.getNivel(), 0); //TODO: Cambiar el dir
+		}
+		("," < tIDENTIFICADOR >)*
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+		
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
+	catch(SimboloNoEncontradoException e) {
+		System.out.println(e);
+	}
 }
 
 // (declaracion_accion())*
 void declaracion_acciones() :
 {}
 {
-  try { 
-  	(declaracion_accion())*
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		(declaracion_accion())*
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+		   t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // cabecera_accion() ";" declaracion_variables() declaracion_acciones() bloque_sentencias()
 void declaracion_accion() :
 {}
 {
-  try { 
-	cabecera_accion() ";" declaracion_variables() declaracion_acciones() bloque_sentencias()
-	{
-	  	int nivel = ts.getNivel();
-	  	ts.eliminar_variables(nivel);
-	  	ts.eliminar_acciones(nivel);
-	  	ts.eliminar_parametros_ocultos(nivel + 1);
-		nivel--;
+	try { 
+		cabecera_accion() ";" declaracion_variables() declaracion_acciones() bloque_sentencias()
+		{
+			int nivel = ts.getNivel();
+			ts.eliminar_variables(nivel);
+			ts.eliminar_acciones(nivel);
+			ts.eliminar_parametros_ocultos(nivel + 1);
+			nivel--;
+		}
 	}
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // < tACCION > <tIDENTIFICADOR > parametros_formales()
 void cabecera_accion() :
 {
-  Token to;
-  Simbolo s;
-  boolean ok;
-  LinkedList <Simbolo> lista_param;
+	Token to;
+	Simbolo s;
+	LinkedList <Simbolo> lista_param;
 }
-{
-  try { 
-  	< tACCION >
-  	to = < tIDENTIFICADOR >
-  	{
-  	  int nivel = ts.getNivel();
-  	  int dir = ts.getDir();
-  	  s = ts.buscar_simbolo(to.image);
-  	  if ((s == null) || (s.getNivel() != nivel)) {
-		ts.introducir_accion(to.image, nivel, dir);
-		ok = true;
-  	  }
-  	  else {
-		error_semantico("Identificador duplicado");
-		ok = false;
-  	  }
-  	}
-  	
-  	lista_param = parametros_formales()
-  	{
-  	  if (ok) {
-  	    s.setLista_parametros(lista_param);	// TODO: ¿Se guardan bien? guardar en la tabla los parametros formales como variables
-  	  }
-  	}
-  	
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+{// TODO: Try-catch: Si no hay ningún símbolo se captura la excepcion y se sigue normal; Si el simbolo existe en el mismo nivel throw IdentificadorDuplicado
+	try { 
+		< tACCION >
+		to = < tIDENTIFICADOR >
+		{
+			int nivel = ts.getNivel();
+			int dir = ts.getDir();
+			try { s = ts.buscar_simbolo(to.image); }
+			catch (SimboloNoEncontradoException e) { ts.introducir_accion(to.image, nivel, dir); };
+			if (s.getNivel == nivel) throw IdentificadorDuplicadoException; // Hay identificador, si mismo nivel entonces duplicado
+		}
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		lista_param = parametros_formales()
+		{
+			s.setLista_parametros(lista_param);	// TODO: ¿Se guardan bien? guardar en la tabla los parametros formales como variables
+		}
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+		Token t;
+		do {
+		   t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
+	catch(IdentificadorDuplicadoException e) {
+		System.out.println(e);
+	}
 }
 
 // ("(" parametros() ")")?
 LinkedList<Simbolo> parametros_formales() :
 {
-  LinkedList<Simbolo> ls;
+	LinkedList<Simbolo> ls;
 }
 {
-  try {
-    ("(" parametros() ")")?
-    {
-      	ls = null; // TODO: IR AÑADIENDO CADA PARAMETRO (COMPROBAR MUCHAS COSITAS NAZIS)
-		return ls;
+	try {
+		  ("()")?
+		| "(" parametros() ")"
+		{
+			 ls = null; // TODO: IR AÑADIENDO CADA PARAMETRO (COMPROBAR MUCHAS COSITAS NAZIS)
+			 return ls;
+		}
 	}
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // < tIDENTIFICADOR > (";" parametros())*
-void lista_parametros() :
-{}
+void lista_parametros(Clase_parametro c) :
 {
-  try {
-    < tIDENTIFICADOR > (";" parametros())*
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
-
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+	Token to1, to2;
+	Simbolo s1, s2;
+}
+{
+	try {
+		to1 = < tIDENTIFICADOR > ("," to2 = <IDENTIFICADOR>)+ ";"
+		{
+			// Un parámetro pasado por valor no puede ser pasado por referencia en una nueva acción
+			s1 = buscar_simbolo(to1.image);
+			if ((s1.es_valor()) && (c == REF)) throw new AsignacionParametroPorValorException; // TODO: Hay que comparar el nivel también?
+			s2 = buscar_simbolo(to2.image);
+			if ((s2.es_valor()) && (c == REF)) throw new AsignacionParametroPorValorException; // TODO: Hay que comparar el nivel también?
+		}	
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	  
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
+	catch(AsignacionParametroPorValorException) {
+		System.out.println(e);
+	}
 }
 
 // clase_parametros() tipo_variables() lista_parametros()
 void parametros() :
-{}
 {
-  try { 
-  	clase_parametros() tipo_variables() lista_parametros()
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	Token to;
+	Clase_parametro c;
+}
+{
+	try { 
+		c = clase_parametros()
+		
+		tipo_variables()
+		lista_parametros(c)
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 /*
 	< tVAL >
     | < tREF >
 */
-void clase_parametros() :
+Clase_parametro clase_parametros() :
 {}
 {
-  try {
-    < tVAL >
-    | < tREF >
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		< tVAL > { return Clase_parametro.VAL; }
+		| < tREF > { return Clase_parametro.REF; }
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // < tPRINCIPIO > lista_sentencias() < tFIN >
 void bloque_sentencias() :
 {}
 {
-  try {
-    < tPRINCIPIO > lista_sentencias() < tFIN >
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		< tPRINCIPIO > lista_sentencias() < tFIN >
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // (sentencia())*
 void lista_sentencias() :
 {}
 {
-  try {
-    (sentencia())*
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		(sentencia())+ // TODO: Comprobar al menos una sentencia en semantico o sintactico???
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 /*
@@ -534,106 +545,130 @@ void lista_sentencias() :
 void sentencia() :
 {}
 {
-  try {
-	  leer() ";"
-	| escribir() ";"
-	| < tIDENTIFICADOR > (resto_asignacion() | resto_invocacion_accion()) // Hay que factorizar
-	| seleccion()
-	| mientras_que()
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		  leer() ";"
+		| escribir() ";"
+		| < tIDENTIFICADOR > (resto_asignacion() | resto_invocacion_accion()) // Hay que factorizar
+		| seleccion()
+		| mientras_que()
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // < tOPAS > expresion() ";"
 void resto_asignacion() :
 {}
 {
-  try {
-    < tOPAS > expresion() ";"
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		< tOPAS > expresion() ";"
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // (argumentos())? ";"
 void resto_invocacion_accion() :
 {}
 {
-  try {
-    (argumentos())? ";"
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		(argumentos())? ";"
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // < tLEER > "(" lista_asignables() ")"
 void leer() :
 {}
 {
-  try {
-    < tLEER > "(" lista_asignables() ")"
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		< tLEER > "(" lista_asignables() ")"
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
-// < tIDENTIFICADOR > ("," < tIDENTIFICADOR >)*
+// < tidentificador > ("," < tidentificador >)*
 void lista_asignables() :
-{}
 {
-  try {
-    < tIDENTIFICADOR > ("," < tIDENTIFICADOR >)*
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	token to1, to2;
+	simbolo s1, s2;
+	tipo_variable var1, var2;
+}
+{
+	try {
+		to1 = < tidentificador > ("," to2 = < tidentificador >)*
+		{
+			s1 = buscar_simbolo(to1.image);
+			var1 = s1.getvariable();
+			if (!(s1.es_variable()) && !(s1.es_parametro() &&
+				(var1 != tipo_variable.entero) && (var1 != tipo_variable.char) &&
+				(var1 != tipo_variable.desconocido))) throw new tipoinvalidoleerexception; // todo
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+			if (s1.es_valor()) throw new AsignacionParametroPorValorException; //TODO
+
+			s2 = buscar_simbolo(to2.image);
+			var2 = s2.getVariable();
+			if (!(s1.es_variable()) && !(s1.es_parametro() &&
+				(var1 != tipo_variable.entero) && (var1 != tipo_variable.char) &&
+				(var1 != tipo_variable.desconocido))) throw new tipoinvalidoleerexception; // todo
+
+			if (s2.es_valor()) throw new AsignacionParametroPorValorException; //TODO
+		}
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
+	catch(AsignacionParametroPorValorException e) {
+		System.out.println(e);
+	}
 }
 
 //  tESCRIBIR >  "(" lista_escribibles()  ("," lista_escribibles())* ")"
 void escribir() :
 {}
 {
-  try {
-    < tESCRIBIR >  "(" lista_escribibles()  ("," lista_escribibles())* ")"
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		< tESCRIBIR >  "(" lista_escribibles()  ("," lista_escribibles())* ")" // TODO: Escribir aqui ya por la salida estándar guardando la lista de escribibles?
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 /*
@@ -645,71 +680,101 @@ void escribir() :
 void lista_escribibles() :
 {}
 {
-  try {
-	  < tIDENTIFICADOR >
-	| < tCONSTCHAR >
-	| < tCONSTCAD >
-	| < tENTACAR >  "(" < tCONSTENTERA > ")"
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		  < tIDENTIFICADOR >
+		| < tCONSTCHAR >
+		| < tCONSTCAD >
+		| < tENTACAR >  "(" < tCONSTENTERA > ")"
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // < tIDENTIFICADOR > < tOPAS > expresion() ";"
 void asignacion() :
-{}
 {
-  try {
-    < tIDENTIFICADOR > < tOPAS > expresion() ";"
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	Token to;
+	Simbolo s;
+	Tipo_variable tVar;
+	ExprRegister expr;
+}
+{
+	try {
+		to = < tIDENTIFICADOR >{
+			s = buscar_simbolo(to.image);
+		}
+		< tOPAS >
+		expr = expresion() ";"
+		{
+			if (s.es_valor()) {
+				throw new AsignacionParametroPorValorException; // TODO: No se puede asignar un valor a un parametro por valor
+			}
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+			if (expr.tipo != s.getVariable()) {
+				throw AsignacionDiferentesTiposException; // TODO: Exception diferentes tipos
+			}
+			else {
+				// TODO: Hace falta propagar valor de la nueva variable???
+			}
+		}
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
+	catch(SimboloNoEncontradoException e) {
+		System.out.println(e);
+	}
+	catch(AsignacionParametroPorValorException e) {
+		System.out.println(e);
+	}
+	catch(AsignacionDiferentesTiposException e) {
+		System.out.println(e);
+	}
 }
 
 // < tIDENTIFICADOR > (argumentos())? ";"
-void invocacion_accion() :
+void invocacion_accion() : // INUTIL PORQUE CAUSABA CONFLICTO
 {}
 {
-  try {
-  	< tIDENTIFICADOR > (argumentos())? ";"
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		< tIDENTIFICADOR > (argumentos())? ";"
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // < tMQ > expresion() lista_sentencias() < tFMQ >
 void mientras_que() :
 {}
 {
-  try {
-  	< tMQ > expresion() lista_sentencias() < tFMQ >
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		< tMQ > expresion() lista_sentencias() < tFMQ >
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 /*
@@ -720,163 +785,157 @@ void mientras_que() :
 void seleccion() :
 {}
 {
-  try {
-	< tSI > expresion() < tENT > lista_sentencias()
-	(< tSI_NO > lista_sentencias())*
-	< tFSI >
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		< tSI > expresion() < tENT > lista_sentencias()
+		(< tSI_NO > lista_sentencias())*
+		< tFSI >
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // "(" (lista_expresiones())? ")"
 void argumentos() :
 {}
 {
-  try {
-    "(" (lista_expresiones())? ")"
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		"(" (lista_expresiones())? ")"
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // (expresion())+
 void lista_expresiones() :
 {}
 {
-  try {
-  	(expresion())+
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		(expresion())+
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // expresion_simple() (operador_relacional() expresion_simple())*
 ExprRegister expresion() :
 {
-  ExprRegister exprIzq, exprDer, resultado;
-  Tipo_variable varExprIzq, varExprDer;
-  Tipo_operador op;
-  boolean ok;
+	ExprRegister exprIzq, exprDer, resultado;
+	Tipo_variable varIzq, varDer;
+	Tipo_operador op;
 }
 {
-  try {
-    exprIzq = expresion_simple()
-    op = operador_relacional()
-    exprDer = expresion_simple()
-    {
-      	resultado = new ExprRegister();
-		varExprIzq = exprIzq.tipo;
-      	varExprDer = exprDer.tipo;
-      	
-  	  	ok = true;
-		switch(op) {
-	  		case SUMA:
-	  			if ((varExprIzq != Tipo_variable.ENTERO)
-	  				&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
-	  				error_semantico("El miembro izquierdo de la expresión debería ser de tipo entero");
-					ok = false;
-	  			}
-	
-				if ((varExprDer != Tipo_variable.ENTERO)
-	  				&& (varExprDer != Tipo_variable.DESCONOCIDO)) {
-					error_semantico("El miembro derecho de la expresión debería ser de tipo entero");
-					ok = false;
-	  			}
-	
-	  			if (ok) {
-	  			  	if ((varExprDer == Tipo_variable.ENTERO)
-	  			  	  	&& (varExprIzq == Tipo_variable.ENTERO)) {
-		  			  	resultado.val_entero = exprIzq.val_entero + exprDer.val_entero;
-						resultado.tipo = Tipo_variable.ENTERO;
+	try {
+		exprIzq = expresion_simple()
+		op = operador_relacional()
+		exprDer = expresion_simple()
+		resultado = new ExprRegister();
+		resultado.tipo = Tipo_variable.BOOLEANO;
+		{
+			switch(op) { // TODO: Las expresiones solo permiten comparar enteros??? Y booleanos???
+				case MAYOR:
+					if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
+						throw new Exception; // TODO
 					}
-					else {
-						resultado.tipo = Tipo_variable.DESCONOCIDO;
+					if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
+						throw new Exception; // TODO
 					}
-	  			}
-	  			
-	  			return resultado;
-	  			
-	  		case RESTA:
-				if ((varExprIzq != Tipo_variable.ENTERO)
-	  				&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
-	  				error_semantico("El miembro izquierdo de la expresión debería ser de tipo entero");
-					ok = false;
-	  			}
-	
-				if ((varExprDer != Tipo_variable.ENTERO)
-	  				&& (varExprDer != Tipo_variable.DESCONOCIDO)) {
-					error_semantico("El miembro derecho de la expresión debería ser de tipo entero");
-					ok = false;
-	  			}
-	
-	  			if (ok) {
-	  			  	if ((varExprDer == Tipo_variable.ENTERO)
-	  			  	  	&& (varExprIzq == Tipo_variable.ENTERO)) {
-		  			  	resultado.val_entero = exprIzq.val_entero - exprDer.val_entero;
-						resultado.tipo = Tipo_variable.ENTERO;
-					}
-					else {
-						resultado.tipo = Tipo_variable.DESCONOCIDO;
-					}
-	  			}
-	  			
-	  			return resultado;
-	
-	  		case OR:
-				if ((varExprIzq != Tipo_variable.BOOLEANO)
-	  				&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
-	  				error_semantico("El miembro izquierdo de la expresión debería ser de tipo booleano");
-					ok = false;
-	  			}
-	
-				if ((varExprDer != Tipo_variable.BOOLEANO)
-	  				&& (varExprDer != Tipo_variable.DESCONOCIDO)) {
-					error_semantico("El miembro derecho de la expresión debería ser de tipo booleano");
-					ok = false;
-	  			}
-	
-	  			if (ok) {
-	  			  	if ((varExprDer == Tipo_variable.BOOLEANO)
-	  			  	  	&& (varExprIzq == Tipo_variable.BOOLEANO)) {
-		  			  	resultado.val_booleano = exprIzq.val_booleano | exprDer.val_booleano;
-						resultado.tipo = Tipo_variable.BOOLEANO;
-					}
-					else {
-						resultado.tipo = Tipo_variable.DESCONOCIDO;
-					}
-	  			}
-	  			
-	  			return resultado;	
-      	}
-    }
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+					if (exprIzq.val_entero > exprDer.val_entero) resultado.val_booleano = 1;
+					else resultado.val_booleano = 0;
+
+					break;
+
+				case MENOR:
+					if (varizq != tipo_variable.entero || varizq != tipo_variable.desconocido) {
+						throw new exception; // todo
+					}
+					if (varder != tipo_variable.entero || varder != tipo_variable.desconocido) {
+						throw new exception; // todo
+					}
+
+					if (exprizq.val_entero < exprder.val_entero) resultado.val_booleano = 1;
+					else resultado.val_booleano = 0;
+
+					break;
+
+				case IGUAL:
+					if (varizq != tipo_variable.entero || varizq != tipo_variable.desconocido) {
+						throw new exception; // todo
+					}
+					if (varder != tipo_variable.entero || varder != tipo_variable.desconocido) {
+						throw new exception; // todo
+					}
+
+					if (exprizq.val_entero == exprder.val_entero) resultado.val_booleano = 1;
+					else resultado.val_booleano = 0;
+
+					break;
+
+				case MAI:
+					if (varizq != tipo_variable.entero || varizq != tipo_variable.desconocido) {
+						throw new exception; // todo
+					}
+					if (varder != tipo_variable.entero || varder != tipo_variable.desconocido) {
+						throw new exception; // todo
+					}
+
+					if (exprizq.val_entero >= exprder.val_entero) resultado.val_booleano = 1;
+					else resultado.val_booleano = 0;
+
+					break;
+
+				case MEI:
+					if (varizq != tipo_variable.entero || varizq != tipo_variable.desconocido) {
+						throw new exception; // todo
+					}
+					if (varder != tipo_variable.entero || varder != tipo_variable.desconocido) {
+						throw new exception; // todo
+					}
+
+					if (exprizq.val_entero <= exprder.val_entero) resultado.val_booleano = 1;
+					else resultado.val_booleano = 0;
+
+					break;
+
+				case NI:
+					if (varizq != tipo_variable.entero || varizq != tipo_variable.desconocido) {
+						throw new exception; // todo
+					}
+					if (varder != tipo_variable.entero || varder != tipo_variable.desconocido) {
+						throw new exception; // todo
+					}
+
+					if (exprizq.val_entero != exprder.val_entero) resultado.val_booleano = 1;
+					else resultado.val_booleano = 0;
+			}
+		}
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 /*
@@ -890,133 +949,128 @@ ExprRegister expresion() :
 void operador_relacional() :
 {}
 {
-  try {
-	  < tMAYOR >
-	| < tMENOR >
-	| < tIGUAL >
-	| < tMAI >
-	| < tMEI >
-	| < tNI >
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		  < tMAYOR > { return Tipo_operador.MAYOR; }
+		| < tMENOR > { return Tipo_operador.MENOR; }
+		| < tIGUAL > { return Tipo_operador.IGUAL; }
+		| < tMAI > { return Tipo_operador.MAI; }
+		| < tMEI > { return Tipo_operador.MEI; }
+		| < tNI > { return Tipo_operador.NI; }
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // termino() (operador_aditivo() termino())* 
 ExprRegister expresion_simple() :
 {
-  ExprRegister exprIzq, exprDer, resultado;
-  Tipo_operador op;
-  boolean ok;
+	ExprRegister exprIzq, exprDer, resultado;
+	Tipo_operador op;
+	boolean ok;
 }
 {
-  try {
-    exprIzq =termino()
-    (
-      op =operador_aditivo()
-      exprDer = termino()
-    )*
-    {
-      	resultado = new ExprRegister();
-		varExprIzq = exprIzq.tipo;
-      	varExprDer = exprDer.tipo;
+	try {
+		exprIzq =termino()
+		(
+			op =operador_aditivo()
+			exprDer = termino()
+		)*
+		{
+			resultado = new ExprRegister();
+			varExprIzq = exprIzq.tipo;
+			varExprDer = exprDer.tipo;
       	
-  	  	ok = true;
-		switch(op) {
-	  		case SUMA:
-	  			if ((varExprIzq != Tipo_variable.ENTERO)
-	  				&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
-	  				error_semantico("El miembro izquierdo de la expresión debería ser de tipo entero");
-					ok = false;
+			switch(op) {
+				case SUMA:
+				if ((varExprIzq != Tipo_variable.ENTERO)
+					&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
+					throw MiembroExpresionNoEnteroException; // TODO: Indicar miembro izquierdo
 	  			}
 	
 				if ((varExprDer != Tipo_variable.ENTERO)
 	  				&& (varExprDer != Tipo_variable.DESCONOCIDO)) {
-					error_semantico("El miembro derecho de la expresión debería ser de tipo entero");
-					ok = false;
+					throw MiembroExpresionNoEnteroException; // TODO: Indicar miembro derecho
 	  			}
 	
-	  			if (ok) {
-	  			  	if ((varExprDer == Tipo_variable.ENTERO)
-	  			  	  	&& (varExprIzq == Tipo_variable.ENTERO)) {
-		  			  	resultado.val_entero = exprIzq.val_entero + exprDer.val_entero;
-						resultado.tipo = Tipo_variable.ENTERO;
-					}
-					else {
-						resultado.tipo = Tipo_variable.DESCONOCIDO;
-					}
-	  			}
+				if ((varExprDer == Tipo_variable.ENTERO)
+					&& (varExprIzq == Tipo_variable.ENTERO)) {
+					resultado.val_entero = exprIzq.val_entero + exprDer.val_entero;
+					resultado.tipo = Tipo_variable.ENTERO;
+				}
+				else {
+					resultado.tipo = Tipo_variable.DESCONOCIDO;
+				}
+			}
 	  			
 	  			return resultado;
 	  			
 	  		case RESTA:
 				if ((varExprIzq != Tipo_variable.ENTERO)
 	  				&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
-	  				error_semantico("El miembro izquierdo de la expresión debería ser de tipo entero");
-					ok = false;
+					throw MiembroExpresionNoEnteroException; // TODO: Indicar miembro izquierdo
 	  			}
 	
 				if ((varExprDer != Tipo_variable.ENTERO)
 	  				&& (varExprDer != Tipo_variable.DESCONOCIDO)) {
-					error_semantico("El miembro derecho de la expresión debería ser de tipo entero");
-					ok = false;
+					throw MiembroExpresionNoEnteroException; // TODO: Indicar miembro izquierdo
 	  			}
 	
-	  			if (ok) {
-	  			  	if ((varExprDer == Tipo_variable.ENTERO)
-	  			  	  	&& (varExprIzq == Tipo_variable.ENTERO)) {
-		  			  	resultado.val_entero = exprIzq.val_entero - exprDer.val_entero;
-						resultado.tipo = Tipo_variable.ENTERO;
-					}
-					else {
-						resultado.tipo = Tipo_variable.DESCONOCIDO;
-					}
-	  			}
+				if ((varExprDer == Tipo_variable.ENTERO)
+					&& (varExprIzq == Tipo_variable.ENTERO)) {
+					resultado.val_entero = exprIzq.val_entero - exprDer.val_entero;
+					resultado.tipo = Tipo_variable.ENTERO;
+				}
+				else {
+					resultado.tipo = Tipo_variable.DESCONOCIDO;
+				}
 	  			
 	  			return resultado;
 	
 	  		case OR:
 				if ((varExprIzq != Tipo_variable.BOOLEANO)
 	  				&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
-	  				error_semantico("El miembro izquierdo de la expresión debería ser de tipo booleano");
-					ok = false;
+					throw MiembroExpresionNoEnteroBooleano; // TODO: Indicar miembro izquierdo
 	  			}
 	
 				if ((varExprDer != Tipo_variable.BOOLEANO)
 	  				&& (varExprDer != Tipo_variable.DESCONOCIDO)) {
-					error_semantico("El miembro derecho de la expresión debería ser de tipo booleano");
-					ok = false;
+					throw MiembroExpresionNoEnteroBooleano; // TODO: Indicar miembro izquierdo
+	  			}
 	  			}
 	
-	  			if (ok) {
-	  			  	if ((varExprDer == Tipo_variable.BOOLEANO)
-	  			  	  	&& (varExprIzq == Tipo_variable.BOOLEANO)) {
-		  			  	resultado.val_booleano = exprIzq.val_booleano | exprDer.val_booleano;
-						resultado.tipo = Tipo_variable.BOOLEANO;
-					}
-					else {
-						resultado.tipo = Tipo_variable.DESCONOCIDO;
-					}
-	  			}
+				if ((varExprDer == Tipo_variable.BOOLEANO)
+					&& (varExprIzq == Tipo_variable.BOOLEANO)) {
+					resultado.val_booleano = exprIzq.val_booleano | exprDer.val_booleano;
+					resultado.tipo = Tipo_variable.BOOLEANO;
+				}
+				else {
+					resultado.tipo = Tipo_variable.DESCONOCIDO;
+				}
 	  			
 	  			return resultado;
-      	}
-    }
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+			}
+		}
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
+	catch(MiembroExpresionNoEnteroException e) {
+		System.out.println(e);
+	}
+	catch(MiembroExpresionNoBooleano e) {
+		System.out.println(e);
+	}
 }
 
 /*
@@ -1027,36 +1081,36 @@ ExprRegister expresion_simple() :
 Tipo_operador operador_aditivo() :
 {}
 {
-  try {
-	  "+" 		{ return Tipo_operador.SUMA; }
-	| "-"		{ return Tipo_operador.RESTA; }
-	| < tOR >	{ return Tipo_operador.OR; }
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		  "+" 		{ return Tipo_operador.SUMA; }
+		| "-"		{ return Tipo_operador.RESTA; }
+		| < tOR >	{ return Tipo_operador.OR; }
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 // factor() (operador_multiplicativo() termino())*
 void termino() :
 {}
 {
-  try {
-    factor() (operador_multiplicativo() factor())* // TODO: El ultimo es factor() o termino(); DIAP 21, SEMANTICO III
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		factor() (operador_multiplicativo() factor())* // TODO: El ultimo es factor() o termino(); DIAP 21, SEMANTICO III
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 /*
@@ -1069,21 +1123,21 @@ void termino() :
 void operador_multiplicativo() :
 {}
 {
-  try {
-	  "*"
-	| "/"
-	| < tDIV >
-	| < tMOD >
-	| < tAND >
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+	try {
+		  "*"
+		| "/"
+		| < tDIV >
+		| < tMOD >
+		| < tAND >
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }
 
 /*
@@ -1101,107 +1155,107 @@ void operador_multiplicativo() :
 */
 ExprRegister factor() :
 {
-  ExprRegister tpFactor, tpExpr, tpID, resultado;
-  Token to;
-  Simbolo s;
+	ExprRegister tpFactor, tpExpr, tpID, resultado;
+	Token to;
+	Simbolo s;
 }
 {
-  try {
-	  < tNOT > tpFactor = factor()
-	  {
-		if ((tpFactor.tipo != Tipo_variable.BOOLEANO)
-			&& (tpFactor.tipo != Tipo_variable.DESCONOCIDO)) {
-			error_semantico("Tipo incompatible. Se esperaba booleano");
-		}
+	try {
+		< tNOT > tpFactor = factor()
+		{
+			if ((tpFactor.tipo != Tipo_variable.BOOLEANO)
+				&& (tpFactor.tipo != Tipo_variable.DESCONOCIDO)) {
+				error_semantico("Tipo incompatible. Se esperaba booleano");
+				}
 
-		// resultado.val_booleano = Boolean.parseBoolean(tpFactor.val_booleano); TODO?
-		resultado.tipo  = Tipo_variable.BOOLEANO;
-		return resultado;
-	  }
+			// resultado.val_booleano = Boolean.parseBoolean(tpFactor.val_booleano); TODO?
+			resultado.tipo  = Tipo_variable.BOOLEANO;
+			return resultado;
+		}
 	  
-	| "-" tpFactor = factor()
-	{
-		if ((tpFactor.tipo != Tipo_variable.ENTERO)
-			&& (tpFactor.tipo != Tipo_variable.DESCONOCIDO)) {
-			error_semantico("Tipo incompatible. Se esperaba entero");
+		| "-" tpFactor = factor()
+		{
+			if ((tpFactor.tipo != Tipo_variable.ENTERO)
+				&& (tpFactor.tipo != Tipo_variable.DESCONOCIDO)) {
+				error_semantico("Tipo incompatible. Se esperaba entero");
+			}
+		
+			// resultado.val_entero = Integer.parseInteger(tpFactor.val_entero); TODO?
+			 resultado.tipo = Tipo_variable.ENTERO;
+			 return resultado;
 		}
-		
-		// resultado.val_entero = Integer.parseInteger(tpFactor.val_entero); TODO?
-		resultado.tipo = Tipo_variable.ENTERO;
-		return resultado;
-	}
-	| "(" tpExpr = expresion() ")"
-	{
-	  	return tpExpr;
-	}
-	| < tENTACAR > "(" tpExpr = expresion() ")"
-	{
-	  	if ((tpExpr.tipo != Tipo_variable.ENTERO)
-	  		&& (tpExpr.tipo != Tipo_variable.DESCONOCIDO)) {
-	  	  	error_semantico("Tipo incompatible. Se esperaba un entero para convertirlo a caracter");
-	 	}
-
-		resultado.val_char = (char)tpExpr.val_entero; // TODO: Convertir ya a caracter?????
-	 	resultado.tipo = Tipo_variable.CHAR;
-	 	return resultado;
-	}
-	| < tCARAENT > "(" expresion() ")"
-	{
-	  	if ((tpExpr.tipo != Tipo_variable.CHAR)
-	  		&& (tpFactor.tipo != Tipo_variable.DESCONOCIDO)) {
-	  	  	error_semantico("Tipo incompatible. Se esperaba un caracter para convertirlo a entero");
-	 	}
-
-	 	resultado.val_entero = (int)tpExpr.val_char; // TODO: Convertir ya a entero?????
-	 	resultado.tipo = Tipo_variable.ENTERO;
-	 	return resultado;
-	}
-	| to = < tIDENTIFICADOR >
-	{
-	  	s = ts.buscar_simbolo(to.image);
-		
-	  	if (s == null) {  // TODO: CAMBIAR PARA HANDELEAR EXCEPCIONES
-	  		error_semantico("Identificador desconocido");
-	  		tpID.tipo = Tipo_variable.DESCONOCIDO;
-	 	}
-	 	else {
-	 	  	tpID.tipo = s.getVariable();
+		| "(" tpExpr = expresion() ")"
+		{
+			return tpExpr;
 		}
-		
-		return tpID;
-	}
-	| to = < tCONSTENTERA >
-	{
-	  	resultado.val_entero = Integer.parseInt(to.image);
-	  	resultado.tipo.ENTERO;
-	  	return resultado;
-	}
-	| to = < tCONSTCHAR >
-	{
-	  	resultado.val_char = to.image.charAt(0);
-	  	resultado.tipo.CHAR;
-	  	return resultado;
-	}
-	| < tCONSTCAD > // TODO: Restricción semántica?? Pasar tipo?
-	| to = < tTRUE >
-	{
-	  	resultado.val_booleano = Boolean.parseBoolean(to.image);
-		resultado.tipo  = Tipo_variable.BOOLEANO;
-		return resultado;
-	}
-	| < tFALSE > // TODO: (Factorizacion): Ver si se puede escribir una sola vez para TRUE y FALSE
-	{
-	  	resultado.val_booleano = Boolean.parseBoolean(to.image);
-		resultado.tipo  = Tipo_variable.BOOLEANO;
-		return resultado;
-	}
-  }
-  catch(ParseException e) {
-	error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+		| < tENTACAR > "(" tpExpr = expresion() ")"
+		{
+			if ((tpExpr.tipo != Tipo_variable.ENTERO)
+				&& (tpExpr.tipo != Tipo_variable.DESCONOCIDO)) {
+				error_semantico("Tipo incompatible. Se esperaba un entero para convertirlo a caracter");
+			}
 
-	Token t;
-    do {
-       t = getNextToken();
-	} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-  }
+			resultado.val_char = (char)tpExpr.val_entero; // TODO: Convertir ya a caracter?????
+			resultado.tipo = Tipo_variable.CHAR;
+			return resultado;
+		}
+		| < tCARAENT > "(" expresion() ")"
+		{
+			if ((tpExpr.tipo != Tipo_variable.CHAR)
+				&& (tpFactor.tipo != Tipo_variable.DESCONOCIDO)) {
+				error_semantico("Tipo incompatible. Se esperaba un caracter para convertirlo a entero");
+			}
+
+			resultado.val_entero = (int)tpExpr.val_char; // TODO: Convertir ya a entero?????
+			resultado.tipo = Tipo_variable.ENTERO;
+			return resultado;
+		}
+		| to = < tIDENTIFICADOR >
+		{
+			s = ts.buscar_simbolo(to.image);
+		
+			if (s == null) {  // TODO: CAMBIAR PARA HANDELEAR EXCEPCIONES
+				error_semantico("Identificador desconocido");
+				tpID.tipo = Tipo_variable.DESCONOCIDO;
+			}
+			else {
+				tpID.tipo = s.getVariable();
+			}
+		
+			return tpID;
+		}
+		| to = < tCONSTENTERA >
+		{
+			resultado.val_entero = Integer.parseInt(to.image);
+			resultado.tipo.ENTERO;
+			return resultado;
+		}
+		| to = < tCONSTCHAR >
+		{
+			resultado.val_char = to.image.charAt(0);
+			resultado.tipo.CHAR;
+			return resultado;
+		}
+		| < tCONSTCAD > // TODO: Restricción semántica?? Pasar tipo?
+		| to = < tTRUE >
+		{
+			resultado.val_booleano = Boolean.parseBoolean(to.image);
+			resultado.tipo  = Tipo_variable.BOOLEANO;
+			return resultado;
+		}
+		| < tFALSE > // TODO: (Factorizacion): Ver si se puede escribir una sola vez para TRUE y FALSE
+		{
+			resultado.val_booleano = Boolean.parseBoolean(to.image);
+			resultado.tipo  = Tipo_variable.BOOLEANO;
+			return resultado;
+		}
+	}
+	catch(ParseException e) {
+		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
+
+		Token t;
+		do {
+			t = getNextToken();
+		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
 }

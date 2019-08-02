@@ -1,6 +1,6 @@
-package semantico;
+package semantico.excepciones;
 
-public class SimboloNoEncontradoException extends Exception {
+public class SimboloNoEncontradoException extends SemanticException {
 
 	private static final long serialVersionUID = 8922484408021048158L;
 	
@@ -11,6 +11,6 @@ public class SimboloNoEncontradoException extends Exception {
 	}
 	
 	public String toString() {
-		return "No se ha encontrado el símbolo " + this.simbolo;
+		return super.toString() + "No se ha encontrado el símbolo " + this.simbolo;
 	}
 }
