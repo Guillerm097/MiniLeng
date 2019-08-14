@@ -59,7 +59,7 @@ public class Tabla_simbolos {
 		
 		while(listIter.hasNext() && seguir) {
 			s2 = listIter.next();
-			if (s2.equals(nombre)) {
+			if (s2.getNombre().equals(nombre)) {
 				seguir = false;
 			}
 		}
