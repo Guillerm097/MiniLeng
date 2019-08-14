@@ -419,7 +419,7 @@ LinkedList<Simbolo> parametros_formales() :
 		  ("()")?
 		| "(" parametros() ")"
 		{
-			 ls = null; // TODO: IR AÑADIENDO CADA PARAMETRO (COMPROBAR MUCHAS COSITAS NAZIS)
+			 ls = null; // TODO: IR AÑADIENDO CADA PARAMETRO (COMPROBAR MUCHAS COSAS NAZIS)
 			 return ls;
 		}
 	}
@@ -441,7 +441,7 @@ void lista_parametros(Clase_parametro c) :
 }
 {
 	try {
-		to1 = < tIDENTIFICADOR > ("," to2 = <IDENTIFICADOR>)+ ";"
+		to1 = < tIDENTIFICADOR > ("," to2 = <tIDENTIFICADOR>)+ ";"
 		{
 			// Un parámetro pasado por valor no puede ser pasado por referencia en una nueva acción
 			s1 = buscar_simbolo(to1.image);
@@ -628,7 +628,7 @@ void lista_asignables() :
 }
 {
 	try {
-		to1 = < tidentificador > ("," to2 = < tidentificador >)*
+		to1 = < tIDENTIFICADOR > ("," to2 = < tIDENTIFICADOR >)*
 		{
 			s1 = buscar_simbolo(to1.image);
 			var1 = s1.getvariable();
@@ -855,16 +855,17 @@ ExprRegister expresion() :
 		exprIzq = expresion_simple()
 		op = operador_relacional()
 		exprDer = expresion_simple()
-		resultado = new ExprRegister();
-		resultado.tipo = Tipo_variable.BOOLEANO;
 		{
+			resultado = new ExprRegister();
+			resultado.tipo = Tipo_variable.BOOLEANO;
+		
 			switch(op) { // DUDA: Las expresiones solo permiten comparar enteros??? Y booleanos???
 				case MAYOR:
 					if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
-						throw new Exception; // TODO
+						throw new Exception(); // TODO
 					}
 					if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
-						throw new Exception; // TODO
+						throw new Exception(); // TODO
 					}
 
 					if (exprIzq.val_entero > exprDer.val_entero) resultado.val_booleano = 1;
@@ -874,10 +875,10 @@ ExprRegister expresion() :
 
 				case MENOR:
 					if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
-						throw new exception; // TODO
+						throw new Exception(); // TODO
 					}
 					if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
-						throw new exception; // TODO
+						throw new Exception(); // TODO
 					}
 
 					if (exprizq.val_entero < exprder.val_entero) resultado.val_booleano = 1;
@@ -887,10 +888,10 @@ ExprRegister expresion() :
 
 				case IGUAL:
 					if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
-						throw new exception; // TODO
+						throw new Exception(); // TODO
 					}
 					if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
-						throw new exception; // TODO
+						throw new Exception(); // TODO
 					}
 
 					if (exprizq.val_entero == exprder.val_entero) resultado.val_booleano = 1;
@@ -900,10 +901,10 @@ ExprRegister expresion() :
 
 				case MAI:
 					if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
-						throw new exception; // TODO
+						throw new Exception(); // TODO
 					}
 					if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
-						throw new exception; // TODO
+						throw new Exception(); // TODO
 					}
 
 					if (exprizq.val_entero >= exprder.val_entero) resultado.val_booleano = 1;
@@ -913,10 +914,10 @@ ExprRegister expresion() :
 
 				case MEI:
 					if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
-						throw new exception; // TODO
+						throw new Exception(); // TODO
 					}
 					if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
-						throw new exception; // TODO
+						throw new Exception(); // TODO
 					}
 
 					if (exprizq.val_entero <= exprder.val_entero) resultado.val_booleano = 1;
@@ -926,10 +927,10 @@ ExprRegister expresion() :
 
 				case NI:
 					if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
-						throw new exception; // TODO
+						throw new Exception(); // TODO
 					}
 					if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
-						throw new exception; // TODO
+						throw new Exception(); // TODO
 					}
 
 					if (exprizq.val_entero != exprder.val_entero) resultado.val_booleano = 1;
@@ -1043,12 +1044,12 @@ ExprRegister expresion_simple() :
 	  		case OR:
 				if ((varExprIzq != Tipo_variable.BOOLEANO)
 	  				&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
-					throw new MiembroExpresionNoEnteroBooleano; // TODO: Indicar miembro izquierdo
+					throw new MiembroExpresionNoEnteroBooleano(); // TODO: Indicar miembro izquierdo
 	  			}
 
 				if ((varExprDer != Tipo_variable.BOOLEANO)
 	  				&& (varExprDer != Tipo_variable.DESCONOCIDO)) {
-					throw new MiembroExpresionNoEnteroBooleano; // TODO: Indicar miembro izquierdo
+					throw new MiembroExpresionNoEnteroBooleano(); // TODO: Indicar miembro izquierdo
 	  			}
 
 				if ((varExprDer == Tipo_variable.BOOLEANO)
@@ -1187,7 +1188,7 @@ ExprRegister factor() :
 				error_semantico("Tipo incompatible. Se esperaba entero");
 			}
 
-			resultado.val_entero = Integer.parseInteger(tpFactor.val_entero); TODO?
+			resultado.val_entero = Integer.parseInteger(tpFactor.val_entero); // DUDA: Convertir ya a entero???
 			resultado.tipo = Tipo_variable.ENTERO;
 			return resultado;
 		}
