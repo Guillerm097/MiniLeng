@@ -10,28 +10,39 @@ options
 PARSER_BEGIN(MiniLeng)
 
 package main;
+import java.io.IOException;
 import java.util.LinkedList;
+
+
 import lexico.LexicoUtils;
+
 import sintactico.SintacticoUtils;
 import static sintactico.SintacticoUtils.error_sintactico;
+
 import semantico.*;
-import static semantico.SemanticoUtils.error_semantico;
 import semantico.excepciones.*;
 import semantico.Simbolo.Tipo_variable;
 import semantico.Simbolo.Clase_parametro;
 import semantico.SemanticoUtils.Tipo_operador;
-import semantico.SemanticoUtils.ExprRegister;
+import semantico.ExprRegister;
+
+import generacioncodigo.Salida;
+import static generacioncodigo.Salida.*;
 
 
 public class MiniLeng
 {
 	static Tabla_simbolos ts = new Tabla_simbolos();
+	static Salida sout = null;
+
 
 	public static void main(String args []) throws ParseException
 	{
 		MiniLeng parser;
 
-		//boolean flagsv = args[args.length - 2].equals("flags") && args[args.length - 1].equals("-v");
+		sout = new Salida(args[0] + ".code");
+
+		// DUDA: boolean flagsv = args[args.length - 2].equals("flags") && args[args.length - 1].equals("-v");
 		boolean flagsv = false;
 		if (args.length == 0 || (args.length == 2 && flagsv)) {
 			parser = new MiniLeng(System.in);
@@ -53,11 +64,18 @@ public class MiniLeng
 			if (flagsv) {
 				LexicoUtils.mostrarTabla();
 			}
+
+			// if (volcar_codificacion)
+			escribirFicheroFinalASM();
+
 		}// ERRORES LEXICOS
 		catch (Error e) {
 			LexicoUtils.mostrarErrorLexico(MiniLengTokenManager.input_stream.getBeginLine(),
 										MiniLengTokenManager.input_stream.getBeginColumn(),
 										MiniLengTokenManager.curChar);
+		}
+		catch (IOException io) {
+			System.out.println("No se ha podido escribir el fichero con el codigo ensamblador .code");
 		}
 	}
 }
@@ -222,14 +240,39 @@ int one_line() :
 }*/
 
 // <tPROGRAMA> <tIDENTIFICADOR> ";"
+// declaracion_variables() declaracion_acciones() bloque_sentencias() < EOF >
 void programa() :
-{}
+{
+  	Token to;
+  	String cacciones, cbloqueinstr;
+}
 {
 	try {
-		< tPROGRAMA > < tIDENTIFICADOR > ";"
-		declaracion_variables() declaracion_acciones() bloque_sentencias() < EOF >
+		< tPROGRAMA > to = < tIDENTIFICADOR > ";"
+		{
+		  	ts.introducir_programa(to.image, ts.getDir());
+		}
+		declaracion_variables()
+		cacciones = declaracion_acciones()
+		cbloqueinstr = bloque_sentencias()
+		{
+		  	escribirASM("; Programa " + to.image);
+		  	escribirASM("ENP L" + getEtiqueta());
+
+			escribirASM(cacciones);
+
+			escribirASM("; Comienzo de " + to.image);
+			escribirASM("L" + getEtiqueta() + ":");
+
+		  	escribirASM(cbloqueinstr);
+
+			escribirASM("; Fin de " + to.image);
+		  	escribirASM("LVP");
+		}
+		< EOF >
   	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -247,6 +290,7 @@ void declaracion_variables() :
 		(declaracion() ";")*
 	}
 	catch(ParseException e) {
+		noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -254,23 +298,20 @@ void declaracion_variables() :
 			t = getNextToken();
 		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
 	}
-	catch(SimboloNoEncontradoException e) {
-		Token t;
-	  	t = getNextToken();
-		restoSimboloNoEncontrado(t.beginLine, t.beginColumn);
-		System.out.println(e);
-	}
 }
 
 // tipo_variables() identificadores()
 void declaracion() :
-{}
+{
+  	Tipo_variable tv;
+}
 {
 	try {
 		tv = tipo_variables()
 		identificadores(tv)
 	}
 	catch(ParseException e) {
+		noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -293,6 +334,7 @@ Tipo_variable tipo_variables() :
 		| < tBOOLEANO > { return Tipo_variable.BOOLEANO; }
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -305,29 +347,30 @@ Tipo_variable tipo_variables() :
 // < tIDENTIFICADOR > ("," < tIDENTIFICADOR >)*
 void identificadores(Tipo_variable tipo) :
 {
-	Token t1 = null;
+	Token to1 = null;
+	Token to2 = null;
 }
 {
   	try {
-		t1 = < tIDENTIFICADOR >
+		to1 = < tIDENTIFICADOR >
 		{
-			ts.introducir_variable(t1.image, tipo, ts.getNivel(), 0); //TODO: Cambiar el dir
+			ts.introducir_variable(to1.image, tipo, ts.getNivel(), ts.getDir());
+			ts.setDir(ts.getDir() + 1);
 		}
-		("," < tIDENTIFICADOR >)*
+		("," to2 = < tIDENTIFICADOR >)*
+		{
+		  	ts.introducir_variable(to2.image, tipo, ts.getNivel(), ts.getDir());
+			ts.setDir(ts.getDir() + 1);
+		}
 	}
 	catch(ParseException e) {
+		noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
 		do {
 			t = getNextToken();
 		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
-	}
-	catch(SimboloNoEncontradoException e) {
-		Token t;
-	  	t = getNextToken();
-		restoSimboloNoEncontrado(t.beginLine, t.beginColumn);
-		System.out.println(e);
 	}
 }
 
@@ -339,6 +382,7 @@ void declaracion_acciones() :
 		(declaracion_accion())*
 	}
 	catch(ParseException e) {
+		noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -359,10 +403,12 @@ void declaracion_accion() :
 			ts.eliminar_variables(nivel);
 			ts.eliminar_acciones(nivel);
 			ts.eliminar_parametros_ocultos(nivel + 1);
-			nivel--;
+			ts.setNivel(nivel--);
+			ts.setDir(0); // TODO DUDA: Cómo recuperar la @ máx del BA anterior?
 		}
 	}
 	catch(ParseException e) {
+		noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -376,10 +422,10 @@ void declaracion_accion() :
 void cabecera_accion() :
 {
 	Token to;
-	Simbolo s;
+	Simbolo s = null;
 	LinkedList <Simbolo> lista_param;
 }
-{// TODO: Si el simbolo existe en el mismo nivel throw IdentificadorDuplicado
+{
 	try {
 		< tACCION >
 		to = < tIDENTIFICADOR >
@@ -387,8 +433,17 @@ void cabecera_accion() :
 			int nivel = ts.getNivel();
 			int dir = ts.getDir();
 			try { s = ts.buscar_simbolo(to.image); }
-			catch (SimboloNoEncontradoException e) { ts.introducir_accion(to.image, nivel, dir); }
-			if (s.getNivel == nivel) throw new IdentificadorDuplicadoException(to.beginLine, to.beginColumn, to.image); // Hay identificador, si mismo nivel entonces duplicado
+			catch (SimboloNoEncontradoException e) {
+			  	ts.introducir_accion(to.image, nivel, ts.getDir());
+				ts.setDir(nivel + 1);
+			}
+
+			// Hay identificador, si mismo nivel entonces duplicado
+			if (s.getNivel() == nivel)
+				throw new IdentificadorDuplicadoException(to.beginLine, to.beginColumn, to.image);
+
+			ts.setNivel(nivel + 1);
+			ts.setDir(3); // Nuevo bloque de activación la dirección pasa a ser 3
 		}
 
 		lista_param = parametros_formales()
@@ -397,6 +452,7 @@ void cabecera_accion() :
 		}
 	}
 	catch(ParseException e) {
+		noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -405,6 +461,7 @@ void cabecera_accion() :
 		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
 	}
 	catch(IdentificadorDuplicadoException e) {
+		noCodificarASM();
 		System.out.println(e);
 	}
 }
@@ -424,6 +481,7 @@ LinkedList<Simbolo> parametros_formales() :
 		}
 	}
 	catch(ParseException e) {
+		noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -444,13 +502,14 @@ void lista_parametros(Clase_parametro c) :
 		to1 = < tIDENTIFICADOR > ("," to2 = <tIDENTIFICADOR>)+ ";"
 		{
 			// Un parámetro pasado por valor no puede ser pasado por referencia en una nueva acción
-			s1 = buscar_simbolo(to1.image);
-			if ((s1.es_valor()) && (c == REF)) throw new AsignacionParametroPorValorException(to.beginLine, to.beginColumn, to.image);
-			s2 = buscar_simbolo(to2.image);
-			if ((s2.es_valor()) && (c == REF)) throw new AsignacionParametroPorValorException(to.beginLine, to.beginColumn, to.image);
+			s1 = ts.buscar_simbolo(to1.image);
+			if ((s1.es_valor()) && (c == Clase_parametro.REF)) throw new AsignacionParametroPorValorException(to1.beginLine, to1.beginColumn, to1.image);
+			s2 = ts.buscar_simbolo(to2.image);
+			if ((s2.es_valor()) && (c == Clase_parametro.REF)) throw new AsignacionParametroPorValorException(to2.beginLine, to2.beginColumn, to2.image);
 		}
 	}
 	catch(ParseException e) {
+		noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -458,7 +517,12 @@ void lista_parametros(Clase_parametro c) :
 			t = getNextToken();
 		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
 	}
+	catch(SimboloNoEncontradoException e) {
+		noCodificarASM();
+		System.out.println(e);
+	}
 	catch(AsignacionParametroPorValorException e) {
+		noCodificarASM();
 		System.out.println(e);
 	}
 }
@@ -477,6 +541,7 @@ void parametros() :
 		lista_parametros(c)
 	}
 	catch(ParseException e) {
+		noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -494,10 +559,11 @@ Clase_parametro clase_parametros() :
 {}
 {
 	try {
-		< tVAL > { return Clase_parametro.VAL; }
+		  < tVAL > { return Clase_parametro.VAL; }
 		| < tREF > { return Clase_parametro.REF; }
 	}
 	catch(ParseException e) {
+		noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -515,6 +581,7 @@ void bloque_sentencias() :
 		< tPRINCIPIO > lista_sentencias() < tFIN >
 	}
 	catch(ParseException e) {
+		noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -532,6 +599,7 @@ void lista_sentencias() :
 		(sentencia())+
 	}
 	catch(ParseException e) {
+		noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -559,6 +627,7 @@ void sentencia() :
 		| mientras_que()
 	}
 	catch(ParseException e) {
+		noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -576,6 +645,7 @@ void resto_asignacion() :
 		< tOPAS > expresion() ";"
 	}
 	catch(ParseException e) {
+		noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -593,6 +663,7 @@ void resto_invocacion_accion() :
 		(argumentos())? ";"
 	}
 	catch(ParseException e) {
+		noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -604,12 +675,19 @@ void resto_invocacion_accion() :
 
 // < tLEER > "(" lista_asignables() ")"
 void leer() :
-{}
+{
+	String cadLeer;
+}
 {
 	try {
-		< tLEER > "(" lista_asignables() ")"
+		< tLEER >
+		"(" cadLeer = lista_asignables() ")"
+		{
+			escribirASM(cadLeer);
+		}
 	}
 	catch(ParseException e) {
+		noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -620,54 +698,101 @@ void leer() :
 }
 
 // < tidentificador > ("," < tidentificador >)*
-void lista_asignables() :
+String lista_asignables() :
 {
-	token to1, to2;
-	simbolo s1, s2;
+  	String cadLeer;
+	Token to1, to2;
+	Simbolo s1, s2;
 	Tipo_variable var1, var2;
+	int nivelSimbolo;
 }
 {
 	try {
-		to1 = < tIDENTIFICADOR > ("," to2 = < tIDENTIFICADOR >)*
+		to1 = < tIDENTIFICADOR > ("," to2 = < tIDENTIFICADOR >
 		{
-			s1 = buscar_simbolo(to1.image);
-			var1 = s1.getvariable();
+			s1 = ts.buscar_simbolo(to1.image);
+			var1 = s1.getVariable();
 			if (!(s1.es_variable()) && !(s1.es_parametro() &&
 				(var1 != Tipo_variable.ENTERO) && (var1 != Tipo_variable.CHAR) &&
-				(var1 != Tipo_variable.DESCONOCIDO))) throw new TipoInvalidoLeerException(to1.beginLine, to1.beginColumn, to1.image);
+				(var1 != Tipo_variable.DESCONOCIDO)))
+				throw new TipoInvalidoLeerException(to1.beginLine, to1.beginColumn, to1.image, var1);
 
-			if (s1.es_valor()) throw new AsignacionParametroPorValorException(to1.beginLine, to1.beginColumn, to1.image);
+			if (s1.es_valor())
+				throw new AsignacionParametroPorValorException(to1.beginLine, to1.beginColumn, to1.image);
 
-			s2 = buscar_simbolo(to2.image);
+			leerrSM += "SRF " + ts.getNivel() + " " + s1.getDir() + '\n';
+			if (s1.getVariable() == Tipo_variable.CHAR){
+				cadLeer += "RD 0\n";
+			}
+			else {
+				cadLeer += "RD 1\n";
+			}
+
+			s2 = ts.buscar_simbolo(to2.image);
 			var2 = s2.getVariable();
 			if (!(s1.es_variable()) && !(s1.es_parametro() &&
 				(var1 != Tipo_variable.ENTERO) && (var1 != Tipo_variable.CHAR) &&
-				(var1 != Tipo_variable.DESCONOCIDO))) throw new TipoInvalidoLeerException(to2.beginLine, to2.beginColumn, to2.image);
+				(var1 != Tipo_variable.DESCONOCIDO)))
+				throw new TipoInvalidoLeerException(to2.beginLine, to2.beginColumn, to2.image, var2);
 
-			if (s2.es_valor()) throw new AsignacionParametroPorValorException(to2.beginLine, to2.beginColumn, to2.image);
+			if (s2.es_valor())
+				throw new AsignacionParametroPorValorException(to2.beginLine, to2.beginColumn, to2.image);
+
+
+			cadLeer += "SRF " + ts.getNivel() + " " + s2.getDir() + '\n';
+			if (s2.getVariable() == Tipo_variable.CHAR){
+				cadLeer += "RD 0\n";
+			}
+			else {
+				cadLeer += "RD 1\n";
+			}
+
+			return cadLeer;
 		}
+		)*
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
-
+st
 		Token t;
 		do {
 			t = getNextToken();
 		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
 	}
+	catch(SimboloNoEncontradoException e) {
+	  	noCodificarASM();
+
+		Token t;
+	  	t = getNextToken();
+		e.restoSimboloNoEncontrado(t.beginLine, t.beginColumn);
+		System.out.println(e);
+	}
+	catch(TipoInvalidoLeerException e) {
+		noCodificarASM();
+		System.out.println(e);
+	}
 	catch(AsignacionParametroPorValorException e) {
+	  	noCodificarASM();
 		System.out.println(e);
 	}
 }
 
 //  tESCRIBIR >  "(" lista_escribibles()  ("," lista_escribibles())* ")"
 void escribir() :
-{}
+{
+	String cadEscribir;
+}
 {
 	try {
-		< tESCRIBIR >  "(" lista_escribibles()  ("," lista_escribibles())* ")" // TODO: Escribir aqui ya por la salida estándar guardando la lista de escribibles?
+		< tESCRIBIR >
+		"(" cadEscribir = lista_escribibles() ")"
+		{
+			escribirASM(cadEscribir);
+		}
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -678,21 +803,43 @@ void escribir() :
 }
 
 /*
-	< tIDENTIFICADOR >
+	(
+	  < tIDENTIFICADOR >
 	| < tCONSTCHAR >
 	| < tCONSTCAD >
 	| < tENTACAR >  "(" < tCONSTENTERA > ")"
+	) ("," lista_escribibles())*
 */
-void lista_escribibles() :
-{}
+String lista_escribibles() :
 {
-	try {
-		  < tIDENTIFICADOR >
-		| < tCONSTCHAR >
-		| < tCONSTCAD >
-		| < tENTACAR >  "(" < tCONSTENTERA > ")"
+	String cadEscribir;
+	Simbolo s1, s2;
+	Token to1, to2;
+}
+{
+	try { // TODO: Acabar parte de generacion de codigo; Esta mal hasta ahora
+		  to = < tIDENTIFICADOR >
+		| to = < tCONSTCHAR >
+		| to = < tCONSTCAD >
+		| to = < tENTACAR >  "(" < tCONSTENTERA > ")"
+		("," to = lista_escribibles()
+		{
+			s1 = buscar_simbolo(to1.image);
+			cadEscribir += "SRF " + ts.getNivel() + " " + s1.getDir() + '\n';
+			cadEscribir += "DRF \n"
+			if ((s1.getVariable() == Tipo_variable.CHAR) || (to1.kind)) {
+				cadEscribir += "WRT 0\n";
+			}
+			else {
+				cadEscribir += "WRT 1\n";
+			}
+
+			return cadEscribir;
+		}
+		)*
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -713,7 +860,7 @@ void asignacion() :
 {
 	try {
 		to = < tIDENTIFICADOR >{
-			s = buscar_simbolo(to.image);
+			s = ts.buscar_simbolo(to.image);
 		}
 		< tOPAS >
 		expr = expresion() ";"
@@ -722,8 +869,8 @@ void asignacion() :
 				throw new AsignacionParametroPorValorException(to.beginLine, to.beginColumn, to.image);
 			}
 
-			if (s.getVariable() != expr.tipo) { 
-				throw AsignacionDiferentesTiposException(to.beginLine, to.beginColumn, to.image, s.getVariable(), expr.tipo);
+			if (s.getVariable() != expr.tipo) {
+				throw new AsignacionDiferentesTiposException(to.beginLine, to.beginColumn, to.image, s.getVariable(), expr.tipo);
 			}
 			else {
 				// TODO: Hace falta propagar valor de la nueva variable???
@@ -731,6 +878,7 @@ void asignacion() :
 		}
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -739,15 +887,19 @@ void asignacion() :
 		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
 	}
 	catch(SimboloNoEncontradoException e) {
+	  	noCodificarASM();
+
 		Token t;
 	  	t = getNextToken();
-		restoSimboloNoEncontrado(t.beginLine, t.beginColumn);
+		e.restoSimboloNoEncontrado(t.beginLine, t.beginColumn);
 		System.out.println(e);
 	}
 	catch(AsignacionParametroPorValorException e) {
+	  	noCodificarASM();
 		System.out.println(e);
 	}
 	catch(AsignacionDiferentesTiposException e) {
+	  	noCodificarASM();
 		System.out.println(e);
 	}
 }
@@ -760,6 +912,7 @@ void invocacion_accion() : // INUTIL PORQUE CAUSABA CONFLICTO
 		< tIDENTIFICADOR > (argumentos())? ";"
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -771,41 +924,97 @@ void invocacion_accion() : // INUTIL PORQUE CAUSABA CONFLICTO
 
 // < tMQ > expresion() lista_sentencias() < tFMQ >
 void mientras_que() :
-{}
+{
+	ExprRegister expr;
+	int etiqINI, etiqFIN;
+}
 {
 	try {
-		< tMQ > expresion() lista_sentencias() < tFMQ >
+		< tMQ >
+		{
+			etiqINI = nuevaEtiqueta();
+			escribirEtiquetaASM(etiqINI);
+		}
+		expr = expresion()
+		{
+			if ((expr.tipo != Tipo_variable.BOOLEANO)) || (expr.tipo != Tipo_variable.DESCONOCIDO)){
+				throw new TipoCondicionInvalidoException(); //TODO
+			}
+
+			etiFIN = nuevaEtiqueta();
+			escribirASM("JMF " + "L" + etiqFIN);
+		}
+		lista_sentencias()
+		< tFMQ >
+		{
+			escribirASM("JMP " + "L" + etiqINI);
+			escribirEtiquetaASM(etiqFIN);
+		}
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
 		do {
 			t = getNextToken();
 		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
+	catch(TipoCondicionInvalidoException e) {
+		noCodificarASM();
+		System.out.println(e);
 	}
 }
 
 /*
 	< tSI > expresion() < tENT > lista_sentencias()
-	(< tSI_NO > lista_sentencias())*
+	(< tSI_NO > lista_sentencias())?
 	< tFSI >
 */
 void seleccion() :
-{}
+{
+	ExprRegister expr;
+	int etiqSINO, etiqFIN;
+}
 {
 	try {
-		< tSI > expresion() < tENT > lista_sentencias()
-		(< tSI_NO > lista_sentencias())*
+		< tSI > expr = expresion()
+		{
+			if ((expr.tipo != Tipo_variable.BOOLEANO) || (expr.tipo != Tipo_variable.DESCONOCIDO)){
+				throw new TipoCondicionInvalidoException(); //TODO
+			}
+
+			etiqSINO = nuevaEtiqueta();
+			escribirASM("JMF L" + etiqSINO);
+		}
+		< tENT >
+		lista_sentencias()
+		{
+			etiqFIN = nuevaEtiqueta();
+			escribirASM("JMP L" + etiqFIN);
+			escribirEtiquetaASM(etiqSINO);
+		}
+		(
+			< tSI_NO >
+			lista_sentencias()
+		)?
 		< tFSI >
+		{
+			escribirEtiquetaASM(etiqFIN);
+		}
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
 		do {
 			t = getNextToken();
 		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
+	catch(TipoCondicionInvalidoException e) {
+		noCodificarASM();
+		System.out.println(e);
 	}
 }
 
@@ -817,6 +1026,7 @@ void argumentos() :
 		"(" (lista_expresiones())? ")"
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -834,6 +1044,7 @@ void lista_expresiones() :
 		(expresion())+
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -856,95 +1067,106 @@ ExprRegister expresion() :
 		op = operador_relacional()
 		exprDer = expresion_simple()
 		{
-			resultado = new ExprRegister();
+			varIzq = exprIzq.tipo;
+		  	varDer = exprDer.tipo;
+		  	resultado = new ExprRegister(); // TODO: Propagar fila y columna
 			resultado.tipo = Tipo_variable.BOOLEANO;
-		
+
 			switch(op) { // DUDA: Las expresiones solo permiten comparar enteros??? Y booleanos???
 				case MAYOR:
-					if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
-						throw new Exception(); // TODO
-					}
-					if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
-						throw new Exception(); // TODO
-					}
+				if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
+					throw new Exception(); // TODO
+				}
+				if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
+					throw new Exception(); // TODO
+				}
 
-					if (exprIzq.val_entero > exprDer.val_entero) resultado.val_booleano = 1;
-					else resultado.val_booleano = 0;
+				if (exprIzq.val_entero > exprDer.val_entero) resultado.val_booleano = true;
+				else resultado.val_booleano = false;
 
-					break;
+				return resultado;
 
 				case MENOR:
-					if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
-						throw new Exception(); // TODO
-					}
-					if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
-						throw new Exception(); // TODO
-					}
+				if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
+					throw new Exception(); // TODO
+				}
+				if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
+					throw new Exception(); // TODO
+				}
 
-					if (exprizq.val_entero < exprder.val_entero) resultado.val_booleano = 1;
-					else resultado.val_booleano = 0;
+				if (exprIzq.val_entero < exprDer.val_entero) resultado.val_booleano = true;
+				else resultado.val_booleano = false;
 
-					break;
+				return resultado;
 
 				case IGUAL:
-					if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
-						throw new Exception(); // TODO
-					}
-					if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
-						throw new Exception(); // TODO
-					}
+				if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
+					throw new Exception(); // TODO
+				}
+				if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
+					throw new Exception(); // TODO
+				}
 
-					if (exprizq.val_entero == exprder.val_entero) resultado.val_booleano = 1;
-					else resultado.val_booleano = 0;
+				if (exprIzq.val_entero == exprDer.val_entero) resultado.val_booleano = true;
+				else resultado.val_booleano = false;
 
-					break;
+				return resultado;
 
 				case MAI:
-					if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
-						throw new Exception(); // TODO
-					}
-					if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
-						throw new Exception(); // TODO
-					}
+				if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
+					throw new Exception(); // TODO
+				}
+				if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
+					throw new Exception(); // TODO
+				}
 
-					if (exprizq.val_entero >= exprder.val_entero) resultado.val_booleano = 1;
-					else resultado.val_booleano = 0;
+				if (exprIzq.val_entero >= exprDer.val_entero) resultado.val_booleano = true;
+				else resultado.val_booleano = false;
 
-					break;
+				return resultado;
 
 				case MEI:
-					if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
-						throw new Exception(); // TODO
-					}
-					if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
-						throw new Exception(); // TODO
-					}
+				if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
+					throw new Exception(); // TODO
+				}
+				if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
+					throw new Exception(); // TODO
+				}
 
-					if (exprizq.val_entero <= exprder.val_entero) resultado.val_booleano = 1;
-					else resultado.val_booleano = 0;
+				if (exprIzq.val_entero <= exprDer.val_entero) resultado.val_booleano = true;
+				else resultado.val_booleano = false;
 
-					break;
+				return resultado;
 
 				case NI:
-					if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
-						throw new Exception(); // TODO
-					}
-					if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
-						throw new Exception(); // TODO
-					}
+				if (varIzq != Tipo_variable.ENTERO || varIzq != Tipo_variable.DESCONOCIDO) {
+					throw new Exception(); // TODO
+				}
+				if (varDer != Tipo_variable.ENTERO || varDer != Tipo_variable.DESCONOCIDO) {
+					throw new Exception(); // TODO
+				}
 
-					if (exprizq.val_entero != exprder.val_entero) resultado.val_booleano = 1;
-					else resultado.val_booleano = 0;
+				if (exprIzq.val_entero != exprDer.val_entero) resultado.val_booleano = true;
+				else resultado.val_booleano = false;
+
+				return resultado;
+
+				default:
+				return resultado;
 			}
 		}
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
 		do {
 			t = getNextToken();
 		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
+	catch(Exception e) {
+		// TODO: Borrar cuando acabe lo de arriba
 	}
 }
 
@@ -956,7 +1178,7 @@ ExprRegister expresion() :
 	| < tMEI >
 	| < tNI >
 */
-void operador_relacional() :
+Tipo_operador operador_relacional() :
 {}
 {
 	try {
@@ -968,6 +1190,7 @@ void operador_relacional() :
 		| < tNI > { return Tipo_operador.NI; }
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -981,18 +1204,17 @@ void operador_relacional() :
 ExprRegister expresion_simple() :
 {
 	ExprRegister exprIzq, exprDer, resultado;
+	Tipo_variable varExprIzq, varExprDer;
 	Tipo_operador op;
-	boolean ok;
 }
 {
 	try {
-		exprIzq =termino()
+		exprIzq = termino()
 		(
 			op =operador_aditivo()
 			exprDer = termino()
-		)*
 		{
-			resultado = new ExprRegister();
+			resultado = new ExprRegister(); // TODO: Propagar fila y columna
 			varExprIzq = exprIzq.tipo;
 			varExprDer = exprDer.tipo;
 
@@ -1000,12 +1222,14 @@ ExprRegister expresion_simple() :
 				case SUMA:
 				if ((varExprIzq != Tipo_variable.ENTERO)
 					&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
-					throw MiembroExpresionNoEnteroException; // TODO: Indicar miembro izquierdo
+					throw new TipoMiembroExpresionInvalidoException(exprIzq.fila,
+							exprIzq.columna, varExprIzq, "entero, desconocido", "izquierdo");
 	  			}
 
 				if ((varExprDer != Tipo_variable.ENTERO)
 	  				&& (varExprDer != Tipo_variable.DESCONOCIDO)) {
-					throw MiembroExpresionNoEnteroException; // TODO: Indicar miembro derecho
+					throw new TipoMiembroExpresionInvalidoException(exprDer.fila,
+							exprDer.columna, varExprDer, "entero, desconocido", "derecho");
 	  			}
 
 				if ((varExprDer == Tipo_variable.ENTERO)
@@ -1019,15 +1243,17 @@ ExprRegister expresion_simple() :
 
 	  			return resultado;
 
-	  		case RESTA:
+		  		case RESTA:
 				if ((varExprIzq != Tipo_variable.ENTERO)
 	  				&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
-					throw MiembroExpresionNoEnteroException; // TODO: Indicar miembro izquierdo
+					throw new TipoMiembroExpresionInvalidoException(exprIzq.fila,
+							exprIzq.columna, varExprIzq, "entero, desconocido", "izquierdo");
 	  			}
 
 				if ((varExprDer != Tipo_variable.ENTERO)
 	  				&& (varExprDer != Tipo_variable.DESCONOCIDO)) {
-					throw MiembroExpresionNoEnteroException; // TODO: Indicar miembro izquierdo
+					throw new TipoMiembroExpresionInvalidoException(exprDer.fila,
+							exprDer.columna, varExprDer, "entero, desconocido", "derecho");
 	  			}
 
 				if ((varExprDer == Tipo_variable.ENTERO)
@@ -1041,15 +1267,17 @@ ExprRegister expresion_simple() :
 
 	  			return resultado;
 
-	  		case OR:
+		  		case OR:
 				if ((varExprIzq != Tipo_variable.BOOLEANO)
 	  				&& (varExprIzq != Tipo_variable.DESCONOCIDO)) {
-					throw new MiembroExpresionNoEnteroBooleano(); // TODO: Indicar miembro izquierdo
+					throw new TipoMiembroExpresionInvalidoException(exprIzq.fila,
+							exprIzq.columna, varExprIzq, "booleano, desconocido", "izquierdo");
 	  			}
 
 				if ((varExprDer != Tipo_variable.BOOLEANO)
 	  				&& (varExprDer != Tipo_variable.DESCONOCIDO)) {
-					throw new MiembroExpresionNoEnteroBooleano(); // TODO: Indicar miembro izquierdo
+					throw new TipoMiembroExpresionInvalidoException(exprDer.fila,
+							exprDer.columna, varExprDer, "booleano, desconocido", "derecho");
 	  			}
 
 				if ((varExprDer == Tipo_variable.BOOLEANO)
@@ -1062,10 +1290,15 @@ ExprRegister expresion_simple() :
 				}
 
 	  			return resultado;
+
+	  			default:
+	  			return resultado;
 			}
 		}
+		)*
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -1073,10 +1306,8 @@ ExprRegister expresion_simple() :
 			t = getNextToken();
 		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
 	}
-	catch(MiembroExpresionNoEnteroException e) {
-		System.out.println(e);
-	}
-	catch(MiembroExpresionNoBooleano e) {
+	catch(TipoMiembroExpresionInvalidoException e) {
+		noCodificarASM();
 		System.out.println(e);
 	}
 }
@@ -1095,6 +1326,7 @@ Tipo_operador operador_aditivo() :
 		| < tOR >	{ return Tipo_operador.OR; }
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -1104,14 +1336,24 @@ Tipo_operador operador_aditivo() :
 	}
 }
 
-// factor() (operador_multiplicativo() termino())*
-void termino() :
-{}
+// factor() (operador_multiplicativo() factor())*
+ExprRegister termino() :
+{
+  	ExprRegister expr;
+}
 {
 	try {
-		factor() (operador_multiplicativo() factor())* // TODO: El ultimo es factor() o termino(); DIAP 21, SEMANTICO III
+		expr = factor() (operador_multiplicativo() factor())* // TODO: El ultimo es factor() o termino(); DIAP 21, SEMANTICO III
+		{
+			// TODO: Revisar si basta con mirar el primer factor: ¿Solo entero y booleano?
+			if ((expr.tipo == Tipo_variable.ENTERO) || (expr.tipo == Tipo_variable.BOOLEANO)) {
+				return expr;
+			}
+			// TODO: else throw Exception
+		}
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -1139,6 +1381,7 @@ void operador_multiplicativo() :
 		| < tAND >
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -1163,7 +1406,10 @@ void operador_multiplicativo() :
 */
 ExprRegister factor() :
 {
-	ExprRegister tpFactor, tpExpr, tpID, resultado;
+	ExprRegister tpFactor = new ExprRegister();
+	ExprRegister tpExpr = new ExprRegister();
+	ExprRegister tpID = new ExprRegister();
+	ExprRegister resultado = new ExprRegister();
 	Token to;
 	Simbolo s;
 }
@@ -1173,11 +1419,13 @@ ExprRegister factor() :
 		{
 			if ((tpFactor.tipo != Tipo_variable.BOOLEANO)
 				&& (tpFactor.tipo != Tipo_variable.DESCONOCIDO)) {
-				error_semantico("Tipo incompatible. Se esperaba booleano");
+				//TODO: error_semantico("Tipo incompatible. Se esperaba booleano");
 			}
 
-			resultado.val_booleano = Boolean.parseBoolean(tpFactor.val_booleano);
+			resultado.val_booleano = !(tpFactor.val_booleano);
 			resultado.tipo  = Tipo_variable.BOOLEANO;
+			resultado.fila = tpFactor.fila;
+			resultado.columna = tpFactor.columna;
 			return resultado;
 		}
 
@@ -1185,11 +1433,13 @@ ExprRegister factor() :
 		{
 			if ((tpFactor.tipo != Tipo_variable.ENTERO)
 				&& (tpFactor.tipo != Tipo_variable.DESCONOCIDO)) {
-				error_semantico("Tipo incompatible. Se esperaba entero");
+				//TODO: error_semantico("Tipo incompatible. Se esperaba entero");
 			}
 
-			resultado.val_entero = Integer.parseInteger(tpFactor.val_entero); // DUDA: Convertir ya a entero???
+			resultado.val_entero = tpFactor.val_entero; // DUDA: Convertir ya a entero???
 			resultado.tipo = Tipo_variable.ENTERO;
+			resultado.fila = tpFactor.fila;
+			resultado.columna = tpFactor.columna;
 			return resultado;
 		}
 		| "(" tpExpr = expresion() ")"
@@ -1200,59 +1450,72 @@ ExprRegister factor() :
 		{
 			if ((tpExpr.tipo != Tipo_variable.ENTERO)
 				&& (tpExpr.tipo != Tipo_variable.DESCONOCIDO)) {
-				error_semantico("Tipo incompatible. Se esperaba un entero para convertirlo a caracter");
+				//TODO: error_semantico("Tipo incompatible. Se esperaba un entero para convertirlo a caracter");
 			}
 
 			resultado.val_char = (char)tpExpr.val_entero; // DUDA: Convertir ya a caracter?????
 			resultado.tipo = Tipo_variable.CHAR;
+			resultado.fila = tpExpr.fila;
+			resultado.columna = tpExpr.columna;
 			return resultado;
 		}
 		| < tCARAENT > "(" expresion() ")"
 		{
 			if ((tpExpr.tipo != Tipo_variable.CHAR)
 				&& (tpFactor.tipo != Tipo_variable.DESCONOCIDO)) {
-				error_semantico("Tipo incompatible. Se esperaba un caracter para convertirlo a entero");
+				//TODO: error_semantico("Tipo incompatible. Se esperaba un caracter para convertirlo a entero");
 			}
 
 			resultado.val_entero = Character.getNumericValue(tpExpr.val_char); // DUDA: Convertir ya a entero?????
-			resultado.tipo = Tipo_variable.ENTERO;
+			resultado.tipo = Tipo_variable.ENTERO; // TODO: Mirar fila y columna
 			return resultado;
 		}
 		| to = < tIDENTIFICADOR >
 		{
 			s = ts.buscar_simbolo(to.image);
 			tpID.tipo = s.getVariable();
-
+			resultado.fila = to.beginLine;
+			resultado.columna = to.beginColumn;
 			return tpID;
 		}
 		| to = < tCONSTENTERA >
 		{
 			resultado.val_entero = Integer.parseInt(to.image);
-			resultado.tipo.ENTERO;
+			resultado.tipo = Tipo_variable.ENTERO;
+			resultado.fila = to.beginLine;
+			resultado.columna = to.beginColumn;
 			return resultado;
 		}
 		| to = < tCONSTCHAR >
 		{
 			resultado.val_char = to.image.charAt(0);
-			resultado.tipo.CHAR;
+			resultado.tipo = Tipo_variable.CHAR;
+			resultado.fila = to.beginLine;
+			resultado.columna = to.beginColumn;
 			return resultado;
 		}
 		| < tCONSTCAD > // TODO: Restricción semántica?? Pasar tipo?
+
 		// TODO: (Factorizacion): Ver si se puede escribir una sola vez para TRUE y FALSE
 		| to = < tTRUE >
 		{
 			resultado.val_booleano = Boolean.parseBoolean(to.image);
 			resultado.tipo  = Tipo_variable.BOOLEANO;
+			resultado.fila = to.beginLine;
+			resultado.columna = to.beginColumn;
 			return resultado;
 		}
-		| to = < tFALSE > 
+		| to = < tFALSE >
 		{
 			resultado.val_booleano = Boolean.parseBoolean(to.image);
 			resultado.tipo  = Tipo_variable.BOOLEANO;
+			resultado.fila = to.beginLine;
+			resultado.columna = to.beginColumn;
 			return resultado;
 		}
 	}
 	catch(ParseException e) {
+	  	noCodificarASM();
 		error_sintactico(e.currentToken, e.expectedTokenSequences, e.tokenImage);
 
 		Token t;
@@ -1261,9 +1524,11 @@ ExprRegister factor() :
 		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
 	}
 	catch(SimboloNoEncontradoException e) {
+	  	noCodificarASM();
+
 		Token t;
 	  	t = getNextToken();
-		restoSimboloNoEncontrado(t.beginLine, t.beginColumn);
+		e.restoSimboloNoEncontrado(t.beginLine, t.beginColumn);
 		System.out.println(e);
 		tpID.tipo = Tipo_variable.DESCONOCIDO;
 		return tpID;
