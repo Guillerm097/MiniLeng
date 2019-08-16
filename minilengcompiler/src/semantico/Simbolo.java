@@ -27,12 +27,12 @@ public class Simbolo {
 	// Lista de atributos que definen al símbolo
 	String nombre;
 	int nivel;
+	int dir;
 	Tipo_simbolo tipo;
 	Tipo_variable variable;
 	Clase_parametro parametro;
 	boolean visible;
 	LinkedList<Simbolo> lista_parametros = new LinkedList<Simbolo>();
-	int dir;
 	
 	public void introducir_programa(String nombre, int dir) {
 		this.nombre = nombre;
@@ -123,6 +123,14 @@ public class Simbolo {
 	
 	public void setNivel(int nivel) {
 		this.nivel = nivel;
+	}
+	
+	public int getDir() {
+		return dir;
+	}
+	
+	public void setDir(int dir) {
+		this.dir = dir;
 	}
 	
 	public boolean getVisible() {

@@ -10,6 +10,6 @@ public class IdentificadorDuplicadoException extends SemanticException {
 	
 	public String toString() {
 		return super.toString() + "Ya existe un identificador idéntico a" + _token +
-				"mismo nivel del programa.";
+				" en el mismo nivel del programa.";
 	}
 }
