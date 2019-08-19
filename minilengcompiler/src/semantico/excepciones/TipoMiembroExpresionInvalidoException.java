@@ -42,10 +42,4 @@ public class TipoMiembroExpresionInvalidoException extends SemanticException {
 				+ _tipoExprInvalida  + " cuando debería de ser de uno de los siguientes tipos : "
 				+ _tipoExprValidos;
 	}
-	
-	/*public String toString() {
-		return  "Error semántico (" + _fila + "," + _columna + ";" + _fila_final + _columna_final
-				+ "): " + "El miembro izquierdo de la expresion " + " es de tipo " + _tipoExprIzq
-				+ " y el miembro derecho " + _tipoExprDer + " cuando deberían ser del mismo tipo";
-	}*/
 }

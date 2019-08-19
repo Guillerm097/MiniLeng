@@ -28,7 +28,7 @@ public class LexicoUtils {
 	}
 	
 	public static void mostrarErrorLexico(int filaError, int columnaError, char curChar) {
-		System.out.println("ERROR LÉXICO (" + filaError + ", "
+		System.out.println("ERROR LÉXICO (" + filaError + ","
 				+ columnaError + "): símbolo no reconocido: " + curChar);
 	}
 }

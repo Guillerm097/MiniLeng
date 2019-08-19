@@ -1,0 +1,74 @@
+null	ENP L0
+	STC 2
+	ASG
+	SRF 1 3
+	DRF
+	STC 0
+	ASG
+	SRF 1 4
+	DRF
+L 1:	SRF 1 3
+	DRF
+	SRF 1 4
+	DRF
+	STC 2
+	DIV
+	LT
+	SRF 1 4
+	DRF
+	NGB
+	AND
+	JMF L2
+	SRF 1 4
+	DRF
+	SRF 1 3
+	DRF
+	MOD
+	STC 0
+	EQ
+	ASG
+	SRF 1 4
+	DRF
+	SRF 1 3
+	DRF
+	STC 1
+	PLUS
+	ASG
+	SRF 1 3
+	DRF
+	JMP L1
+L 2:	SRF 1 4
+	DRF
+	NGB
+	JMF L3
+	null
+	JMP L4
+L 3:L 4:	CSF
+	; Comienzo de nprimos
+L 4:	STC 100
+	ASG
+	SRF 0 3
+	DRF
+	STC 2
+	ASG
+	SRF 0 4
+	DRF
+L 5:	SRF 0 4
+	DRF
+	SRF 0 3
+	DRF
+	LTE
+	JMF L6
+	SRF 0 5
+	DRF
+	SRF 0 4
+	DRF
+	STC 1
+	PLUS
+	ASG
+	SRF 0 4
+	DRF
+	JMP L5
+L 6:	; Fin de nprimos
+	LVP
+

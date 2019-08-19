@@ -24,7 +24,7 @@ public class SintacticoUtils {
 					expected.append(" || ");
 				}
 			}
-			String retval = "ERROR SÍNTACTICO (" + currentToken.next.beginLine   + ", " + currentToken.next.beginColumn + "): ";
+			String retval = "ERROR SÍNTACTICO (" + currentToken.next.beginLine   + "," + currentToken.next.beginColumn + "): ";
 			Token tok = currentToken.next;
 			
 			for (int i = 0; i < maxSize; i++) {

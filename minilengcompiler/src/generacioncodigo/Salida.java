@@ -21,12 +21,19 @@ public class Salida {
 
 	public static int nuevaEtiqueta() {
 		etiqueta++;
-    return etiqueta;
+		return etiqueta;
 	}
 
-  public static int getEtiqueta() {
-    return etiqueta;
-  }
+	public static int getEtiqueta() {
+		return etiqueta;
+	}
+	
+	public static void escribirEtiquetaASM() {
+		codigo += "L " + etiqueta + ":";
+	}
+	public static void escribirEtiquetaASM(int etiqueta) {
+		codigo += "L " + etiqueta + ":";
+	}
 
 	public static void escribirASM(String sentencia) {
 		codigo += '\t' + sentencia + '\n';

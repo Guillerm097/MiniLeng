@@ -16,6 +16,6 @@ public class SemanticException extends Exception {
 	}
 
 	public String toString() {
-		return "Error semántico (" + _fila + "," + _columna + "): ";
+		return "ERROR SEMÁNTICO (" + _fila + "," + _columna + "): ";
 	}
 }

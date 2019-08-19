@@ -1,0 +1,95 @@
+null	ENP L0
+	null
+	CSF
+	null
+	SRF 2 3
+RD 1
+
+	CSF
+	STC 0
+	ASG
+	SRF 1 3
+	DRF
+	STC 0
+	ASG
+	SRF 1 4
+	DRF
+L 1:	SRF 1 4
+	DRF
+	NGB
+	JMF L2
+	SRF 1 5
+	DRF
+	SRF 1 3
+	DRF
+	STC 0
+	GT
+	ASG
+	SRF 1 4
+	DRF
+	SRF 1 4
+	DRF
+	NGB
+	JMF L3
+	null
+	SRF 1 5
+	DRF
+	JMP L4
+L 3:L 4:	JMP L1
+L 2:	CSF
+	SRF 1 3
+	DRF
+	STC 1
+	GT
+	JMF L5
+	SRF 1 3
+	DRF
+	STC 1
+	SBT
+	SRF 1 5
+	DRF
+	SRF 1 0
+	DRF
+	SRF 1 3
+	DRF
+	STC 2
+	SBT
+	SRF 1 6
+	DRF
+	SRF 1 0
+	DRF
+	SRF 1 5
+	DRF
+	SRF 1 6
+	DRF
+	PLUS
+	ASG
+	SRF 1 4
+	DRF
+	JMP L6
+L 5:	SRF 1 3
+	DRF
+	ASG
+	SRF 1 4
+	DRF
+L 6:	CSF
+	; Comienzo de fibbonaci
+L 6:	SRF 0 3
+	DRF
+	SRF 0 3
+	DRF
+	SRF 0 3
+	DRF
+	SRF 0 4
+	DRF
+	SRF 0 0
+	DRF
+	nullSRF 0 4
+DRF
+WRT 1
+
+	SRF 0 5
+	DRF
+	; Fin de fibbonaci
+	LVP
+

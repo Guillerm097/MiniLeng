@@ -6,5 +6,4 @@ Se ha utilizado excepciones en vez de punteros nulos, se han utilizado excepcion
 
 DUDAS:
 Guardo cada parámetro como una variable única?
-Guardo la lista de parámetros como un atributo del símbolo acción? SI
 Dos parámetros pueden tener el mismo nombre mientras sean de diferente tipo? Si estan en el mismo nivel NO
