@@ -6,7 +6,6 @@ null	ENP L0
 RD 1
 
 	CSF
-	STC 0
 	ASG
 	SRF 1 3
 	DRF
@@ -22,8 +21,6 @@ L 1:	SRF 1 4
 	DRF
 	SRF 1 3
 	DRF
-	STC 0
-	GT
 	ASG
 	SRF 1 4
 	DRF
@@ -39,12 +36,9 @@ L 3:L 4:	JMP L1
 L 2:	CSF
 	SRF 1 3
 	DRF
-	STC 1
-	GT
 	JMF L5
 	SRF 1 3
 	DRF
-	STC 1
 	SBT
 	SRF 1 5
 	DRF
@@ -52,7 +46,6 @@ L 2:	CSF
 	DRF
 	SRF 1 3
 	DRF
-	STC 2
 	SBT
 	SRF 1 6
 	DRF

@@ -1,0 +1,104 @@
+null	ENP L0
+	; Comienzo de noventa_y_nueve
+L 0:	ASG
+	SRF 0 5
+	DRF
+L 1:	SRF 0 5
+	DRF
+	LTE
+	SRF 0 5
+	DRF
+	GTE
+	OR
+	SRF 0 5
+	DRF
+	DIV
+	SRF 0 5
+	DRF
+	MOD
+	EQ
+	OR
+	JMF L2
+	null
+	SRF 0 5
+RD 1
+
+	JMP L1
+L 2:	null
+	SRF 0 5
+	DRF
+	DIV
+	ASG
+	SRF 0 3
+	DRF
+	SRF 0 5
+	DRF
+	MOD
+	ASG
+	SRF 0 4
+	DRF
+	SRF 0 4
+	DRF
+	TMS
+	SRF 0 3
+	DRF
+	PLUS
+	ASG
+	SRF 0 6
+	DRF
+	SRF 0 5
+	DRF
+	SRF 0 6
+	DRF
+	GT
+	JMF L3
+	SRF 0 5
+	DRF
+	SRF 0 6
+	DRF
+	SBT
+	ASG
+	SRF 0 5
+	DRF
+	JMP L4
+L 3:	SRF 0 6
+	DRF
+	SRF 0 5
+	DRF
+	SBT
+	ASG
+	SRF 0 5
+	DRF
+L 4:	SRF 0 5
+	DRF
+	DIV
+	ASG
+	SRF 0 3
+	DRF
+	SRF 0 5
+	DRF
+	MOD
+	ASG
+	SRF 0 4
+	DRF
+	SRF 0 4
+	DRF
+	TMS
+	SRF 0 3
+	DRF
+	PLUS
+	ASG
+	SRF 0 6
+	DRF
+	SRF 0 6
+	DRF
+	SRF 0 5
+	DRF
+	PLUS
+	ASG
+	SRF 0 5
+	DRF
+	null
+	; Fin de noventa_y_nueve
+	LVP
+

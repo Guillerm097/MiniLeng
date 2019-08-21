@@ -48,7 +48,7 @@ Principio
                         escribir (entacar (13), entacar (10));
                 FSi
         FMq
-		  
+
 Fin
 
 %-----------------------------------------------------------
@@ -57,7 +57,7 @@ accion mcd(Val entero  a,b ; ref  entero  m );
 entero r;
 Principio
         r:=a mod b;
-		  
+
         Mq r<>0
                 a:=b;
                 b:=r;

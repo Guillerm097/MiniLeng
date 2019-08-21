@@ -7,7 +7,7 @@ PROGRAMA calendario;
 
 entero mes,anho,dia1anho,dia1mes,anhade;
 caracter ln;
-    
+
 %-----------------------------------------------------------
 ACCION primer_dia_anho;
 
@@ -36,8 +36,8 @@ ACCION primer_dia_anho;
 %-----------------------------------------------------------
 ACCION primer_dia_mes;
 
-% Calcula el dia de la semana en el cual cayo 
-el dia uno d ese mes
+% Calcula el dia de la semana en el cual cayo
+% el dia uno d ese mes
 % en ese anio
 %-----------------------------------------------------------
 
@@ -60,11 +60,11 @@ el dia uno d ese mes
            si_no
               si mes=4 ent dia1mes:=(dia1anho+90+anhade) MOD 7;
            si_no
-              si mes=5 ent dia1mes:=(dia1anho+120+anhade) MOD 7; 
+              si mes=5 ent dia1mes:=(dia1anho+120+anhade) MOD 7;
            si_no
-              si mes=6 ent dia1mes:=(dia1anho+151+anhade) MOD 7; 
+              si mes=6 ent dia1mes:=(dia1anho+151+anhade) MOD 7;
            si_no
-              si mes=7 ent dia1mes:=(dia1anho+181+anhade) MOD 7; 
+              si mes=7 ent dia1mes:=(dia1anho+181+anhade) MOD 7;
            si_no
               si mes=8 ent dia1mes:=(dia1anho+212+anhade) MOD 7;
            si_no
@@ -76,7 +76,7 @@ el dia uno d ese mes
            si_no
               si mes=12 ent dia1mes:=(dia1anho+334+anhade) MOD 7;
            si_no
-              escribir("Has introducido el mes mal"); 
+              escribir("Has introducido el mes mal");
            fsi
            fsi
            fsi
@@ -98,7 +98,7 @@ el dia uno d ese mes
 %-----------------------------------------------------------
 
 PRINCIPIO
-          
+
      escribir("CALENDARIO");
      escribir("Introduce un mes en cifras:");
      leer(mes, ln);
@@ -106,6 +106,6 @@ PRINCIPIO
      leer(anho, ln);
      primer_dia_anho;
      primer_dia_mes;
-     escribir(dia1mes);    
+     escribir(dia1mes);
 
 FIN

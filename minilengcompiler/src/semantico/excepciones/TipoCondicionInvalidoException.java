@@ -31,7 +31,7 @@ public class TipoCondicionInvalidoException extends SemanticException {
 	}
 	
 	public String toString() {
-		return super.toString() + "La expresión es de tipo " +
+		return super.toString() + "La expresión de la condición es de tipo " +
 					_tipoVariable  + " cuando debería de ser de tipo booleano";
 	}
 }

@@ -8,6 +8,7 @@ public class ExprRegister {
 	public int val_entero;
 	public char val_char;
 	public Tipo_variable tipo;
+	public boolean constante;
 	// Necesario para exhaustividad de las excepciones
 	public int fila, columna;
 }

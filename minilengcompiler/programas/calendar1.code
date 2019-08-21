@@ -1,0 +1,288 @@
+null	ENP L0
+	SRF 1 4
+	DRF
+	SBT
+	ASG
+	SRF 1 4
+	DRF
+	SRF 1 4
+	DRF
+	MOD
+	SRF 1 4
+	DRF
+	MOD
+	AND
+	ASG
+	SRF 1 6
+	DRF
+	SRF 1 4
+	DRF
+	MOD
+	ASG
+	SRF 1 5
+	DRF
+	SRF 1 6
+	DRF
+	SRF 1 5
+	DRF
+	OR
+	ASG
+	SRF 1 4
+	DRF
+	SRF 1 4
+	DRF
+	DIV
+	ASG
+	SRF 1 3
+	DRF
+	SRF 1 4
+	DRF
+	JMF L1
+	SRF 1 4
+	DRF
+	SBT
+	SRF 1 3
+	DRF
+	PLUS
+	MOD
+	ASG
+	SRF 1 5
+	DRF
+	JMP L2
+L 1:	SRF 1 4
+	DRF
+	SRF 1 3
+	DRF
+	PLUS
+	MOD
+	ASG
+	SRF 1 5
+	DRF
+L 2:	CSF
+	SRF 1 4
+	DRF
+	SBT
+	ASG
+	SRF 1 4
+	DRF
+	SRF 1 4
+	DRF
+	MOD
+	SRF 1 4
+	DRF
+	MOD
+	AND
+	ASG
+	SRF 1 5
+	DRF
+	SRF 1 4
+	DRF
+	MOD
+	ASG
+	SRF 1 6
+	DRF
+	SRF 1 5
+	DRF
+	SRF 1 6
+	DRF
+	OR
+	ASG
+	SRF 1 4
+	DRF
+	SRF 1 4
+	DRF
+	JMF L3
+	ASG
+	SRF 1 7
+	DRF
+	JMP L4
+L 3:	ASG
+	SRF 1 7
+	DRF
+L 4:	SRF 1 3
+	DRF
+	JMF L5
+	SRF 1 5
+	DRF
+	ASG
+	SRF 1 6
+	DRF
+	JMP L6
+L 5:	SRF 1 3
+	DRF
+	JMF L7
+	SRF 1 5
+	DRF
+	PLUS
+	MOD
+	ASG
+	SRF 1 6
+	DRF
+	JMP L8
+L 7:	SRF 1 3
+	DRF
+	JMF L9
+	SRF 1 5
+	DRF
+	PLUS
+	SRF 1 7
+	DRF
+	PLUS
+	MOD
+	ASG
+	SRF 1 6
+	DRF
+	JMP L10
+L 9:	SRF 1 3
+	DRF
+	JMF L11
+	SRF 1 5
+	DRF
+	PLUS
+	SRF 1 7
+	DRF
+	PLUS
+	MOD
+	ASG
+	SRF 1 6
+	DRF
+	JMP L12
+L 11:	SRF 1 3
+	DRF
+	JMF L13
+	SRF 1 5
+	DRF
+	PLUS
+	SRF 1 7
+	DRF
+	PLUS
+	MOD
+	ASG
+	SRF 1 6
+	DRF
+	JMP L14
+L 13:	SRF 1 3
+	DRF
+	JMF L15
+	SRF 1 5
+	DRF
+	PLUS
+	SRF 1 7
+	DRF
+	PLUS
+	MOD
+	ASG
+	SRF 1 6
+	DRF
+	JMP L16
+L 15:	SRF 1 3
+	DRF
+	JMF L17
+	SRF 1 5
+	DRF
+	PLUS
+	SRF 1 7
+	DRF
+	PLUS
+	MOD
+	ASG
+	SRF 1 6
+	DRF
+	JMP L18
+L 17:	SRF 1 3
+	DRF
+	JMF L19
+	SRF 1 5
+	DRF
+	PLUS
+	SRF 1 7
+	DRF
+	PLUS
+	MOD
+	ASG
+	SRF 1 6
+	DRF
+	JMP L20
+L 19:	SRF 1 3
+	DRF
+	JMF L21
+	SRF 1 5
+	DRF
+	PLUS
+	SRF 1 7
+	DRF
+	PLUS
+	MOD
+	ASG
+	SRF 1 6
+	DRF
+	JMP L22
+L 21:	SRF 1 3
+	DRF
+	JMF L23
+	SRF 1 5
+	DRF
+	PLUS
+	SRF 1 7
+	DRF
+	PLUS
+	MOD
+	ASG
+	SRF 1 6
+	DRF
+	JMP L24
+L 23:	SRF 1 3
+	DRF
+	JMF L25
+	SRF 1 5
+	DRF
+	PLUS
+	SRF 1 7
+	DRF
+	PLUS
+	MOD
+	ASG
+	SRF 1 6
+	DRF
+	JMP L26
+L 25:	SRF 1 3
+	DRF
+	JMF L27
+	SRF 1 5
+	DRF
+	PLUS
+	SRF 1 7
+	DRF
+	PLUS
+	MOD
+	ASG
+	SRF 1 6
+	DRF
+	JMP L28
+L 27:	null
+L 28:L 26:L 24:L 22:L 20:L 18:L 16:L 14:L 12:L 10:L 8:L 6:	CSF
+	; Comienzo de calendario
+L 28:	null
+	null
+	SRF 0 3
+RD 1
+SRF 0 8
+RD 0
+
+	null
+	SRF 0 4
+RD 1
+SRF 0 8
+RD 0
+
+	SRF 0 9
+	DRF
+	SRF 0 0
+	DRF
+	nullSRF 0 6
+DRF
+WRT 1
+
+	; Fin de calendario
+	LVP
+

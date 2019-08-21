@@ -18,7 +18,7 @@ Principio
         x := n div 10;
         y := n mod 10;
         m := 10*y + x;
-        
+
         Si n > m ent
                 n := n - m;
         si_no

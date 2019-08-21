@@ -7,7 +7,7 @@ public class Salida {
 
 	private static String fichero_destino, codigo;
 	private static int etiqueta;
-	private static boolean volcar_salida;
+	public static boolean volcar_salida;
 
 	public Salida(String _fichero_destino) {
 		etiqueta = 0;
@@ -29,10 +29,10 @@ public class Salida {
 	}
 	
 	public static void escribirEtiquetaASM() {
-		codigo += "L " + etiqueta + ":";
+		codigo += "L" + etiqueta + ":";
 	}
 	public static void escribirEtiquetaASM(int etiqueta) {
-		codigo += "L " + etiqueta + ":";
+		codigo += "L" + etiqueta + ":";
 	}
 
 	public static void escribirASM(String sentencia) {

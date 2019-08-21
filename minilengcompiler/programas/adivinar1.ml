@@ -39,7 +39,7 @@ accion pedirletra;
 %-------------------------------------------------------------------
 principio
 %-------------------------------------------------------------------
- escribir("Piensa en una letra e intentare adivinarla.", 
+ escribir("Piensa en una letra e intentare adivinarla.",
           entacar(13),entacar(10));
  escribir("Listo?");
  siono;
