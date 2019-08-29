@@ -25,6 +25,7 @@ public class Simbolo {
 	}
 
 	// Lista de atributos que definen al símbolo
+	String etiqueta;
 	String nombre;
 	int nivel;
 	int dir;
@@ -37,6 +38,7 @@ public class Simbolo {
 	public void introducir_programa(String nombre, int dir) {
 		this.nombre = nombre;
 		this.dir = dir;
+		this.tipo = Tipo_simbolo.PROGRAMA;
 	}
 
 	public void introducir_variable(String nombre, Tipo_variable variable, int nivel, int dir) {
@@ -44,12 +46,14 @@ public class Simbolo {
 		this.variable = variable;
 		this.nivel = nivel;
 		this.dir = dir;
+		this.tipo = Tipo_simbolo.VARIABLE;
 	}
 
 	public void introducir_accion(String nombre, int nivel, int dir) {
 		this.nombre = nombre;
 		this.nivel = nivel;
 		this.dir = dir;
+		this.tipo = Tipo_simbolo.ACCION;
 	}
 
 	public void introducir_parametro(String nombre, Tipo_variable variable,
@@ -59,6 +63,7 @@ public class Simbolo {
 		this.parametro = parametro;
 		this.nivel = nivel;
 		this.dir = dir;
+		this.tipo = Tipo_simbolo.PARAMETRO;
 	}
 
 	public boolean es_programa() {
@@ -76,23 +81,7 @@ public class Simbolo {
 	public boolean es_parametro() {
 		return tipo == Tipo_simbolo.PARAMETRO;
 	}
-	/*
-	public boolean es_entero() {
-		return variable == Tipo_variable.ENTERO;
-	}
-
-	public boolean es_booleana() {
-		return variable == Tipo_variable.BOOLEANO;
-	}
-
-	public boolean es_char() {
-		return variable == Tipo_variable.CHAR;
-	}
-
-	public boolean es_cadena() {
-		return variable == Tipo_variable.CADENA;
-	}*/
-
+	
 	public boolean es_valor() {
 		return (tipo == Tipo_simbolo.PARAMETRO) && (parametro == Clase_parametro.VAL);
 	}
@@ -148,6 +137,16 @@ public class Simbolo {
 	public void setVariable(Tipo_variable tipo) {
 		this.variable = tipo;
 	}
+	
+	public String getEtiqueta() {
+		return this.etiqueta;
+	}
+	
+	public void setEtiqueta(String etiqueta) {
+		this.etiqueta = etiqueta;
+	}
+	
+	
 
 	@Override
 	public boolean equals(Object o) {

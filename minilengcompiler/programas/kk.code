@@ -1,0 +1,43 @@
+; Programa p
+	ENP L0
+; Accion q
+L1:
+	SRF 1 3
+	DRF
+	WRT 1
+	STC 0
+	ASG
+	; Fin de la acción
+	CSF
+; Accion r
+L2:
+	SRF 1 3
+	DRF
+	WRT 1
+	SRF 1 4
+	DRF
+	WRT 1
+	STC 0
+	ASG
+; Acceso variable k
+	SRF 1 3
+	DRF
+; Invocación a q
+	OSF 4 1 L1
+; Acceso variable l
+	SRF 1 4
+; Invocación a q
+	OSF 4 1 L1
+	; Fin de la acción
+	CSF
+; Comienzo del programa p
+L0:
+; Acceso variable i
+	SRF 0 3
+; Acceso variable j
+	SRF 0 4
+; Invocación a r
+	OSF 4 0 L2
+; Fin de p
+	LVP
+

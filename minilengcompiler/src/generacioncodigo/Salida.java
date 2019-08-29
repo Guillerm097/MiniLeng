@@ -13,6 +13,7 @@ public class Salida {
 		etiqueta = 0;
 		fichero_destino = _fichero_destino;
 		volcar_salida = true;
+		codigo = new String();
 	}
 
 	public static void noCodificarASM() {
@@ -29,14 +30,19 @@ public class Salida {
 	}
 	
 	public static void escribirEtiquetaASM() {
-		codigo += "L" + etiqueta + ":";
+		codigo += "L" + etiqueta + ":\n";
 	}
+
 	public static void escribirEtiquetaASM(int etiqueta) {
-		codigo += "L" + etiqueta + ":";
+		codigo += "L" + etiqueta + ":\n";
 	}
 
 	public static void escribirASM(String sentencia) {
-		codigo += '\t' + sentencia + '\n';
+		codigo += "\t" + sentencia + '\n';
+	}
+	
+	public static void escribirComentarioASM(String sentencia) {
+		codigo += sentencia + '\n';
 	}
 
 	public static void escribirFicheroFinalASM() throws IOException {

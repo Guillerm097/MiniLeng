@@ -69,7 +69,6 @@ public class MiniLeng
 				LexicoUtils.mostrarTabla();
 			}
 			
-			System.out.println(Salida.volcar_salida);
 			escribirFicheroFinalASM();
 
 		}// ERRORES LEXICOS
@@ -256,17 +255,18 @@ void programa() :
 		{
 		  	etiquetaPrograma = getEtiqueta();
 		  	ts.introducir_programa(to.image, ts.getDir());
+			escribirComentarioASM("; Programa " + to.image);
 		  	escribirASM("ENP L" + etiquetaPrograma);
 		}
 		declaracion_variables()
 		declaracion_acciones()
 		{
-			escribirASM("; Comienzo de " + to.image);
+			escribirComentarioASM("; Comienzo del programa " + to.image);
 			escribirEtiquetaASM(etiquetaPrograma);
 		}
 		bloque_sentencias()
 		{
-			escribirASM("; Fin de " + to.image);
+			escribirComentarioASM("; Fin de " + to.image);
 		  	escribirASM("LVP");
 		}
 		< EOF >
@@ -395,18 +395,24 @@ void declaracion_acciones() :
 
 // cabecera_accion() ";" declaracion_variables() declaracion_acciones() bloque_sentencias()
 void declaracion_accion() :
-{}
+{
+  	Simbolo s;
+}
 {
 	try {
-		cabecera_accion() ";" declaracion_variables() declaracion_acciones() bloque_sentencias()
+		s = cabecera_accion() ";" declaracion_variables() declaracion_acciones() bloque_sentencias()
 		{
-			int nivel = ts.getNivel();
+		  	int nivel = ts.getNivel();
+			ts.ocultar_parametros(nivel); // DUDA: OK?
 			ts.eliminar_variables(nivel);
 			ts.eliminar_acciones(nivel);
 			ts.eliminar_parametros_ocultos(nivel + 1);
-			ts.setNivel(nivel - 1);
-			ts.setDir(0); // TODO DUDA: Cómo recuperar la @ máx del BA anterior?
 
+			// Se recupera el nivel y la direccion del BA anterior
+			ts.setNivel(nivel - 1);
+			ts.setDir(s.getDir());
+			
+			escribirASM("; Fin de la acción");
 			escribirASM("CSF");
 		}
 	}
@@ -422,11 +428,12 @@ void declaracion_accion() :
 }
 
 // < tACCION > <tIDENTIFICADOR > parametros_formales()
-void cabecera_accion() :
+Simbolo cabecera_accion() :
 {
 	Token to;
 	Simbolo s = null;
 	LinkedList <Simbolo> lista_param;
+	int etiquetaAccion = 0;
 }
 {
 	try {
@@ -440,14 +447,24 @@ void cabecera_accion() :
 				// Hay identificador, si mismo nivel entonces duplicado
 				if ((s != null) && (s.getNivel() == nivel))
 					throw new IdentificadorDuplicadoException(to.beginLine, to.beginColumn, to.image);
-			  	s = ts.introducir_accion(to.image, nivel, ts.getDir());
-			}
 
+			  	s = ts.introducir_accion(to.image, nivel, ts.getDir());
+
+				etiquetaAccion = nuevaEtiqueta();
+				s.setEtiqueta("L" + etiquetaAccion);
+			}
+			// Nuevo bloque de activación la dirección pasa a ser 3, nuevo nivel
 			ts.setNivel(nivel + 1);
-			ts.setDir(3); // Nuevo bloque de activación la dirección pasa a ser 3
+			ts.setDir(3);
+
+			escribirComentarioASM("; Accion " + to.image);
 		}
 
 		parametros_formales(s)
+		{
+			escribirEtiquetaASM(etiquetaAccion);
+			return s;
+		}
 	}
 	catch(ParseException e) {
 		noCodificarASM();
@@ -658,9 +675,19 @@ void sentencia() :
 		| to = < tIDENTIFICADOR >
 		{
 		  	s = ts.buscar_simbolo(to.image);
-			escribirASM("SRF " + ts.getNivel() + " " + s.getDir());
+		  	//escribirComentarioASM("; Dirección de la variable " +  to.image);
+			if (s.es_variable()) {
+				escribirASM("SRF " + (ts.getNivel() - s.getNivel()) + " " + s.getDir());
+			}
 		}
-		(resto_asignacion() | resto_invocacion_accion()) // Hay que factorizar
+		(resto_asignacion()
+		| resto_invocacion_accion()
+		{
+		  	escribirComentarioASM("; Invocación a " + to.image);
+			escribirASM("OSF " + (s.getDir() - 1) + " " + (ts.getNivel() - s.getNivel()) +
+						" " + s.getEtiqueta());
+		}
+		) // Hay que factorizar
 		| seleccion()
 		| mientras_que()
 	}
@@ -724,16 +751,11 @@ void resto_invocacion_accion() :
 
 // < tLEER > "(" lista_asignables() ")"
 void leer() :
-{
-	String cadLeer;
-}
+{}
 {
 	try {
-		< tLEER >
-		"(" cadLeer = lista_asignables() ")"
-		{
-			escribirASM(cadLeer);
-		}
+		< tLEER > { escribirComentarioASM("; Leer"); }
+		"(" lista_asignables() ")"
 	}
 	catch(ParseException e) {
 		noCodificarASM();
@@ -747,9 +769,8 @@ void leer() :
 }
 
 // < tidentificador > ("," < tidentificador >)*
-String lista_asignables() :
+void lista_asignables() :
 {
-  	String cadLeer;
 	Token to1 = null, to2 = null;
 	Simbolo s1, s2;
 	Tipo_variable var1, var2;
@@ -769,12 +790,13 @@ String lista_asignables() :
 			if (s1.es_valor())
 				throw new AsignacionParametroPorValorException(to1.beginLine, to1.beginColumn, to1.image);
 
-			cadLeer = "SRF " + ts.getNivel() + " " + s1.getDir() + '\n';
+			escribirComentarioASM("; Dirección de la variable " + to1.image);
+			escribirASM("SRF " + ts.getNivel() + " " + s1.getDir());
 			if (s1.getVariable() == Tipo_variable.CHAR){
-				cadLeer += "\tRD 0\n";
+				escribirASM("RD 0");
 			}
 			else {
-				cadLeer += "\tRD 1\n";
+				escribirASM("RD 1");
 			}
 		}
 		("," to2 = < tIDENTIFICADOR >
@@ -790,21 +812,15 @@ String lista_asignables() :
 				throw new AsignacionParametroPorValorException(to2.beginLine, to2.beginColumn, to2.image);
 
 
-			cadLeer += "SRF " + ts.getNivel() + " " + s2.getDir() + '\n';
+			escribirASM("SRF " + ts.getNivel() + " " + s2.getDir());
 			if (s2.getVariable() == Tipo_variable.CHAR){
-				cadLeer += "\tRD 0";
+				escribirASM("RD 0");
 			}
 			else {
-				cadLeer += "\tRD 1";
+			  	escribirASM("RD 1");
 			}
 		}
 		)*
-		{
-		  	if (to2 != null) {
-				cadLeer += '\n';
-		  	}
-	  		return cadLeer;
-		}
 	}
 	catch(ParseException e) {
 	  	noCodificarASM();
@@ -836,16 +852,11 @@ String lista_asignables() :
 //  tESCRIBIR >  "(" lista_escribibles()  ("," lista_escribibles())* 
 
 void escribir() :
-{
-	String cadEscribir;
-}
+{}
 {
 	try {
 		< tESCRIBIR >
-		"(" cadEscribir = lista_escribibles() ")"
-		{
-			escribirASM(cadEscribir);
-		}
+		"(" lista_escribibles() ")"
 	}
 	catch(ParseException e) {
 	  	noCodificarASM();
@@ -866,34 +877,40 @@ void escribir() :
 	| < tENTACAR >  "(" < tCONSTENTERA > ")"
 	) ("," lista_escribibles())*
 */
-String lista_escribibles() :
+void lista_escribibles() :
 {
-	String cadEscribir = null;
 	Simbolo s1, s2;
 	Token to1, to2;
 }
 {
 	try {
-	  	(	  	  to1 = < tENTACAR >  "(" < tCONSTENTERA > ")"
+	  	(	  	  < tENTACAR >  "(" to1 = < tCONSTENTERA > ")"
+	  	  {
+	  	      escribirComentarioASM("; Escribir cadena: " + to1.image);
+		  	  String cadena = to1.image;
+			  escribirASM("STC " + cadena);
+			  escribirASM("WRT 0");
+			  cadena = cadena.substring(1);
+	  	  }
 	    | to1 = < tIDENTIFICADOR >
 		{
 			s1 = ts.buscar_simbolo(to1.image);
-			cadEscribir += "SRF " + ts.getNivel() + " " + s1.getDir() + '\n';
-			cadEscribir += "DRF\n";
+			escribirASM("SRF " + ts.getNivel() + " " + s1.getDir());
+			escribirASM("DRF");
 			if (s1.getVariable() == Tipo_variable.CHAR) {
-				cadEscribir += "WRT 0\n";
+				escribirASM("WRT 0");
 			}
 			else {
-				cadEscribir += "WRT 1\n";
+				escribirASM("WRT 1");
 			}
 		}
 		| to1 = < tCONSTCHAR >
 		| to1 = < tCONSTCAD >
 		{
-		  	String cadena = to1.image;
+		  	escribirComentarioASM("; Escribir cadena: " + to1.image);
+		  	cadena = to1.image;
 		  	cadena = cadena.substring(1, cadena.length() - 1);
 		  	while (!cadena.isEmpty()) {
-		  	  	System.out.println(cadena);
 			  	char c = cadena.charAt(0);
 				escribirASM("STC " + (int) c);
 				escribirASM("WRT 0");
@@ -901,10 +918,7 @@ String lista_escribibles() :
 		  	}
 		}
 		)
-		("," cadEscribir = lista_escribibles())*
-		{
-		  return cadEscribir;
-		}
+		("," lista_escribibles())*
 	}
 	catch(ParseException e) {
 	  	noCodificarASM();
@@ -1010,6 +1024,7 @@ void mientras_que() :
 		{
 			etiqINI = nuevaEtiqueta();
 			escribirEtiquetaASM(etiqINI);
+			escribirComentarioASM("; MQ");
 		}
 		expr = expresion()
 		{
@@ -1018,6 +1033,7 @@ void mientras_que() :
 			}
 
 			etiqFIN = nuevaEtiqueta();
+			escribirComentarioASM("; Salir del bucle si la guarda se evalúa a falso");
 			escribirASM("JMF " + "L" + etiqFIN);
 		}
 		lista_sentencias()
@@ -1054,7 +1070,8 @@ void seleccion() :
 }
 {
 	try {
-		< tSI > expr = expresion()
+		< tSI > { escribirComentarioASM("; SI"); }
+		expr = expresion()
 		{
 			if ((expr.tipo != Tipo_variable.BOOLEANO) && (expr.tipo != Tipo_variable.DESCONOCIDO)){
 				throw new TipoCondicionInvalidoException(expr.fila, expr.columna, expr.tipo);
@@ -1076,6 +1093,7 @@ void seleccion() :
 		)?
 		< tFSI >
 		{
+		  	escribirComentarioASM("; Fin SI");
 			escribirEtiquetaASM(etiqFIN);
 		}
 	}
@@ -1750,9 +1768,13 @@ ExprRegister factor() :
 			tpID.fila = to.beginLine;
 			tpID.columna = to.beginColumn;
 
-			escribirASM("SRF " + ts.getNivel() + " " + s.getDir());
-			escribirASM("DRF");
-
+			escribirComentarioASM("; Acceso variable " + to.image);
+			escribirASM("SRF " + (ts.getNivel() - s.getNivel()) + " " + s.getDir());
+			//System.out.println(s.getNombre() + s.tipo);
+			if (!s.es_referencia()) {
+				escribirASM("DRF");
+			}
+			
 			return tpID;
 		}
 		| to = < tCONSTENTERA >

@@ -199,20 +199,22 @@ public class Tabla_simbolos {
 
 	public void ocultar_parametros(int nivel) {
 		for(nodoTabla nt : tabla) {
-			if((nt.getSim().es_parametro()) && (nt.getSim().getNivel() == nivel)){
-				nt.s.setVisible(false);
-			}
-
-			Iterator<Simbolo> it = nt.lista_colisiones.iterator();
-			while(it.hasNext()) {
-				Simbolo s = it.next();
-				if((s.es_parametro()) && (s.getNivel() == nivel)) {
+			if((nt != null) && (nt.getSim() != null)) {
+				if((nt.getSim().es_parametro()) && (nt.getSim().getNivel() == nivel)){
 					nt.s.setVisible(false);
+				}
+	
+				Iterator<Simbolo> it = nt.lista_colisiones.iterator();
+				while(it.hasNext()) {
+					Simbolo s = it.next();
+					if((s.es_parametro()) && (s.getNivel() == nivel)) {
+						nt.s.setVisible(false);
+					}
 				}
 			}
 		}
 	}
-
+	
 	public void eliminar_parametros_ocultos(int nivel) {
 		for(nodoTabla nt : tabla) {
 			if ((nt != null) && (nt.getSim() != null)) {

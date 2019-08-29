@@ -1,104 +1,187 @@
-null	ENP L0
-	; Comienzo de noventa_y_nueve
-L 0:	ASG
+; Programa noventa_y_nueve
+	ENP L0
+; Comienzo del programa noventa_y_nueve
+L0:
+	SRF 0 5
+	STC 0
+	ASG
+L1:
+; MQ
+; Acceso variable n
 	SRF 0 5
 	DRF
-L 1:	SRF 0 5
-	DRF
+	STC 0
 	LTE
+; Acceso variable n
 	SRF 0 5
 	DRF
+	STC 100
 	GTE
 	OR
+; Acceso variable n
 	SRF 0 5
 	DRF
+	STC 10
 	DIV
+; Acceso variable n
 	SRF 0 5
 	DRF
+	STC 10
 	MOD
 	EQ
 	OR
+; Salir del bucle si la guarda se evalúa a falso
 	JMF L2
-	null
+; Escribir cadena: "n: "
+	STC 110
+	WRT 0
+	STC 58
+	WRT 0
+	STC 32
+	WRT 0
+; Leer
+; Dirección de la variable n
 	SRF 0 5
-RD 1
-
+	RD 1
 	JMP L1
-L 2:	null
+L2:
 	SRF 0 5
 	DRF
+	WRT 1
+; Escribir cadena: " se convierte en "
+	STC 32
+	WRT 0
+	STC 115
+	WRT 0
+	STC 101
+	WRT 0
+	STC 32
+	WRT 0
+	STC 99
+	WRT 0
+	STC 111
+	WRT 0
+	STC 110
+	WRT 0
+	STC 118
+	WRT 0
+	STC 105
+	WRT 0
+	STC 101
+	WRT 0
+	STC 114
+	WRT 0
+	STC 116
+	WRT 0
+	STC 101
+	WRT 0
+	STC 32
+	WRT 0
+	STC 101
+	WRT 0
+	STC 110
+	WRT 0
+	STC 32
+	WRT 0
+	SRF 0 3
+; Acceso variable n
+	SRF 0 5
+	DRF
+	STC 10
 	DIV
 	ASG
-	SRF 0 3
-	DRF
+	SRF 0 4
+; Acceso variable n
 	SRF 0 5
 	DRF
+	STC 10
 	MOD
 	ASG
-	SRF 0 4
-	DRF
+	SRF 0 6
+	STC 10
+; Acceso variable y
 	SRF 0 4
 	DRF
 	TMS
+; Acceso variable x
 	SRF 0 3
 	DRF
 	PLUS
 	ASG
-	SRF 0 6
-	DRF
+; SI
+; Acceso variable n
 	SRF 0 5
 	DRF
+; Acceso variable m
 	SRF 0 6
 	DRF
 	GT
 	JMF L3
 	SRF 0 5
+; Acceso variable n
+	SRF 0 5
 	DRF
+; Acceso variable m
 	SRF 0 6
 	DRF
 	SBT
 	ASG
-	SRF 0 5
-	DRF
 	JMP L4
-L 3:	SRF 0 6
+L3:
+	SRF 0 5
+; Acceso variable m
+	SRF 0 6
 	DRF
+; Acceso variable n
 	SRF 0 5
 	DRF
 	SBT
 	ASG
+; Fin SI
+L4:
+	SRF 0 3
+; Acceso variable n
 	SRF 0 5
 	DRF
-L 4:	SRF 0 5
-	DRF
+	STC 10
 	DIV
 	ASG
-	SRF 0 3
-	DRF
+	SRF 0 4
+; Acceso variable n
 	SRF 0 5
 	DRF
+	STC 10
 	MOD
 	ASG
-	SRF 0 4
-	DRF
+	SRF 0 6
+	STC 10
+; Acceso variable y
 	SRF 0 4
 	DRF
 	TMS
+; Acceso variable x
 	SRF 0 3
 	DRF
 	PLUS
 	ASG
+	SRF 0 5
+; Acceso variable m
 	SRF 0 6
 	DRF
-	SRF 0 6
-	DRF
+; Acceso variable n
 	SRF 0 5
 	DRF
 	PLUS
 	ASG
 	SRF 0 5
 	DRF
-	null
-	; Fin de noventa_y_nueve
+	WRT 1
+; Escribir cadena: 13
+	STC 13
+	WRT 0
+; Escribir cadena: 10
+	STC 10
+	WRT 0
+; Fin de noventa_y_nueve
 	LVP
 

@@ -1,12 +1,20 @@
-null	ENP L0
+; Programa maximo_comun_divisor
+	ENP L0
+; Accion dato
+L1:
 	SRF 1 4
 	STC 0
 	ASG
-L1:	SRF 1 4
+L2:
+; MQ
+; Acceso variable d
+	SRF 1 4
 	DRF
 	STC 0
 	LTE
-	JMF L2
+; Salir del bucle si la guarda se evalúa a falso
+	JMF L3
+; Escribir cadena: "Escribe un numero: "
 	STC 69
 	WRT 0
 	STC 115
@@ -45,15 +53,18 @@ L1:	SRF 1 4
 	WRT 0
 	STC 32
 	WRT 0
-	null
+; Leer
+; Dirección de la variable d
 	SRF 1 4
 	RD 1
-
+; SI
+; Acceso variable d
 	SRF 1 4
 	DRF
 	STC 0
 	LTE
-	JMF L3
+	JMF L4
+; Escribir cadena: "El numero debe ser postivo."
 	STC 69
 	WRT 0
 	STC 108
@@ -108,56 +119,87 @@ L1:	SRF 1 4
 	WRT 0
 	STC 46
 	WRT 0
-	null
-	null
-	JMP L4
-L3:L4:	JMP L1
-L2:	CSF
-	SRF 1 3
+; Escribir cadena: 13
+	STC 13
+	WRT 0
+; Escribir cadena: 10
+	STC 10
+	WRT 0
+	JMP L5
+L4:
+; Fin SI
+L5:
+	JMP L2
+L3:
+	; Fin de la acción
+	CSF
+; Accion mcd
+L6:
+	SRF 0 3
+; Acceso variable a
 	SRF 1 5
 	DRF
+; Acceso variable b
 	SRF 1 6
 	DRF
 	MOD
 	ASG
-L5:	SRF 1 3
+L7:
+; MQ
+; Acceso variable r
+	SRF 0 3
 	DRF
 	STC 0
 	NEQ
-	JMF L6
+; Salir del bucle si la guarda se evalúa a falso
+	JMF L8
 	SRF 1 5
+; Acceso variable b
 	SRF 1 6
 	DRF
 	ASG
 	SRF 1 6
-	SRF 1 3
+; Acceso variable r
+	SRF 0 3
 	DRF
 	ASG
-	SRF 1 3
+	SRF 0 3
+; Acceso variable a
 	SRF 1 5
 	DRF
+; Acceso variable b
 	SRF 1 6
 	DRF
 	MOD
 	ASG
-	JMP L5
-L6:	SRF 1 3
+	JMP L7
+L8:
+	SRF 1 3
+; Acceso variable b
 	SRF 1 6
 	DRF
 	ASG
+	; Fin de la acción
 	CSF
-	; Comienzo de maximo_comun_divisor
-L0:	SRF 0 7
+; Comienzo del programa maximo_comun_divisor
+L0:
+; Invocación a dato
+	OSF 6 0 L1
 	SRF 0 5
+; Acceso variable d
 	SRF 0 4
 	DRF
 	ASG
-	SRF 0 7
+; Invocación a dato
+	OSF 6 0 L1
 	SRF 0 6
+; Acceso variable d
 	SRF 0 4
 	DRF
 	ASG
-	SRF 0 0
+; Invocación a mcd
+	OSF 6 0 L6
+; Escribir cadena: "El MCD es: "
 	STC 69
 	WRT 0
 	STC 108
@@ -180,11 +222,15 @@ L0:	SRF 0 7
 	WRT 0
 	STC 32
 	WRT 0
-	nullSRF 0 3
-DRF
-WRT 1
-
-	null
-	; Fin de maximo_comun_divisor
+	SRF 0 3
+	DRF
+	WRT 1
+; Escribir cadena: 13
+	STC 13
+	WRT 0
+; Escribir cadena: 10
+	STC 10
+	WRT 0
+; Fin de maximo_comun_divisor
 	LVP
 
