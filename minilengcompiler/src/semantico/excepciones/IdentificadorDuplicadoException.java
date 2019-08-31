@@ -9,7 +9,7 @@ public class IdentificadorDuplicadoException extends SemanticException {
 	}
 	
 	public String toString() {
-		return super.toString() + "Ya existe un identificador idéntico a" + _token +
+		return super.toString() + "Ya existe un identificador idéntico a " + _token +
 				" en el mismo nivel del programa.";
 	}
 }

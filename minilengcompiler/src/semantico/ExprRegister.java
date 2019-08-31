@@ -9,6 +9,8 @@ public class ExprRegister {
 	public char val_char;
 	public Tipo_variable tipo;
 	public boolean constante;
+	// cierto si la expresion incluye algun param por valor
+	public boolean parametro_valor;
 	// Necesario para exhaustividad de las excepciones
 	public int fila, columna;
 }

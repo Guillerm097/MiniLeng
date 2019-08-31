@@ -20,12 +20,12 @@ L2:
 	STC 0
 	ASG
 ; Acceso variable k
-	SRF 1 3
+	SRF 0 3
 	DRF
 ; Invocación a q
 	OSF 4 1 L1
 ; Acceso variable l
-	SRF 1 4
+	SRF 0 4
 ; Invocación a q
 	OSF 4 1 L1
 	; Fin de la acción
@@ -34,8 +34,10 @@ L2:
 L0:
 ; Acceso variable i
 	SRF 0 3
+	DRF
 ; Acceso variable j
 	SRF 0 4
+	DRF
 ; Invocación a r
 	OSF 4 0 L2
 ; Fin de p

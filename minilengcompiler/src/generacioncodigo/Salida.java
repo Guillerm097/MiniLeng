@@ -50,6 +50,8 @@ public class Salida {
 			FileWriter fw = new FileWriter(fichero_destino);
 			fw.write(codigo + '\n');
 			fw.close();
+			System.out.println("Compilación finalizada. Se ha generado el fichero " +
+								fichero_destino);
 		}
 	}
 }

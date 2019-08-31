@@ -12,6 +12,7 @@ PARSER_BEGIN(MiniLeng)
 package main;
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.ListIterator;
 
 
 import lexico.LexicoUtils;
@@ -46,12 +47,11 @@ public class MiniLeng
 
 		sout = new Salida(args[0] + ".code");
 
-		// DUDA: boolean flagsv = args[args.length - 2].equals("flags") && args[args.length - 1].equals("-v");
-		boolean flagsv = false;
-		if (args.length == 0 || (args.length == 2 && flagsv)) {
+		boolean flagsv = args[args.length - 1].equals("-v");
+		if (args.length == 0 || (args.length == 1 && flagsv)) {
 			parser = new MiniLeng(System.in);
 		}
-		else if (args.length == 1 || (args.length == 3 && flagsv)) {
+		else if (args.length == 1 || (args.length == 2 && flagsv)) {
 			try {
 				parser = new MiniLeng(new java.io.FileInputStream(args[0] + ".ml"));
 			}
@@ -69,6 +69,7 @@ public class MiniLeng
 				LexicoUtils.mostrarTabla();
 			}
 			
+			// Si no hay errores léxicos, sintácticos ni semánticos
 			escribirFicheroFinalASM();
 
 		}// ERRORES LEXICOS
@@ -180,7 +181,7 @@ TOKEN : /* TOKENS NO CONSTANTES */
 {
 
 	  < tCONSTCHAR : "\"" ~["\""] "\"" >
-	| < tCONSTCAD : "\"" (~["\""])* "\"" >
+	| < tCONSTCAD : "\"" (~["\""])+ "\"" >
 	| < tCONSTENTERA : (< DIGIT >)+ >
 	| < tIDENTIFICADOR : (< LETTER >) | ((< LETTER > | "_") (< LETTER > | < DIGIT > |  "_" )* (< LETTER > | < DIGIT >)) >
 	  {  LexicoUtils.anyadirToken("identificador"); }
@@ -528,7 +529,7 @@ LinkedList<Simbolo> parametros() :
 		v = tipo_variables()
 		lista_parametros(c, v, ls)
 		{
-			return ls; // DUDA: Comprobar si paso de parametros esta bien en general
+			return ls;
 		}
 	}
 	catch(ParseException e) {
@@ -788,10 +789,10 @@ void lista_asignables() :
 					throw new TipoInvalidoLeerException(to1.beginLine, to1.beginColumn, to1.image, var1);
 
 			if (s1.es_valor())
-				throw new AsignacionParametroPorValorException(to1.beginLine, to1.beginColumn, to1.image);
+				throw new LeerParametroPorValorException(to1.beginLine, to1.beginColumn, to1.image);
 
 			escribirComentarioASM("; Dirección de la variable " + to1.image);
-			escribirASM("SRF " + ts.getNivel() + " " + s1.getDir());
+			escribirASM("SRF " + (ts.getNivel() - s1.getNivel()) + " " + s1.getDir());
 			if (s1.getVariable() == Tipo_variable.CHAR){
 				escribirASM("RD 0");
 			}
@@ -809,10 +810,10 @@ void lista_asignables() :
 				throw new TipoInvalidoLeerException(to2.beginLine, to2.beginColumn, to2.image, var2);
 
 			if (s2.es_valor())
-				throw new AsignacionParametroPorValorException(to2.beginLine, to2.beginColumn, to2.image);
+				throw new LeerParametroPorValorException(to2.beginLine, to2.beginColumn, to2.image);
 
 
-			escribirASM("SRF " + ts.getNivel() + " " + s2.getDir());
+			escribirASM("SRF " + (ts.getNivel() - s2.getNivel()) + " " + s2.getDir());
 			if (s2.getVariable() == Tipo_variable.CHAR){
 				escribirASM("RD 0");
 			}
@@ -843,20 +844,19 @@ void lista_asignables() :
 		noCodificarASM();
 		System.out.println(e);
 	}
-	catch(AsignacionParametroPorValorException e) {
+	catch(LeerParametroPorValorException e) {
 	  	noCodificarASM();
 		System.out.println(e);
 	}
 }
 
 //  tESCRIBIR >  "(" lista_escribibles()  ("," lista_escribibles())* 
-
 void escribir() :
 {}
 {
 	try {
 		< tESCRIBIR >
-		"(" lista_escribibles() ")"
+		"(" lista_escribibles() ("," lista_escribibles())* ")"
 	}
 	catch(ParseException e) {
 	  	noCodificarASM();
@@ -874,7 +874,8 @@ void escribir() :
 	  < tIDENTIFICADOR >
 	| < tCONSTCHAR >
 	| < tCONSTCAD >
-	| < tENTACAR >  "(" < tCONSTENTERA > ")"
+	| < tENTACAR >  "(" < t
+	CONSTENTERA > ")"
 	) ("," lista_escribibles())*
 */
 void lista_escribibles() :
@@ -886,6 +887,11 @@ void lista_escribibles() :
 	try {
 	  	(	  	  < tENTACAR >  "(" to1 = < tCONSTENTERA > ")"
 	  	  {
+	  	      int valorEntero = Integer.parseInt(to1.image);
+	  	      
+	  	      if ((valorEntero < 0) || (255 < valorEntero))
+	  	      	throw new EntacarOverflowException(to1.beginLine, to1.beginColumn, valorEntero);
+	  	    
 	  	      escribirComentarioASM("; Escribir cadena: " + to1.image);
 		  	  String cadena = to1.image;
 			  escribirASM("STC " + cadena);
@@ -918,7 +924,6 @@ void lista_escribibles() :
 		  	}
 		}
 		)
-		("," lista_escribibles())*
 	}
 	catch(ParseException e) {
 	  	noCodificarASM();
@@ -937,6 +942,10 @@ void lista_escribibles() :
 		e.restoSimboloNoEncontrado(t.beginLine, t.beginColumn);
 		System.out.println(e);
 	}
+	catch(EntacarOverflowException e) {
+		noCodificarASM();
+		System.out.println(e);
+	}
 }
 
 // INUTIL: CREABA CONFLICTOS; ahora resto_asignacion()
@@ -953,14 +962,13 @@ void asignacion() :
 		to = < tIDENTIFICADOR >
 		{
 			s = ts.buscar_simbolo(to.image);
+			if (s.es_valor()) {
+				throw new AsignacionParametroPorValorException(to.beginLine, to.beginColumn, to.image);
+			}
 		}
 		< tOPAS >
 		expr = expresion() ";"
 		{
-			if (s.es_valor()) {
-				throw new AsignacionParametroPorValorException(to.beginLine, to.beginColumn, to.image);
-			}
-
 			if (s.getVariable() != expr.tipo) {
 				throw new AsignacionDiferentesTiposException(to.beginLine, to.beginColumn,
 						to.image, s.getVariable(), expr.tipo);
@@ -1114,18 +1122,31 @@ void seleccion() :
 
 // "(" (lista_expresiones())? ")"
 void argumentos() :
-{}
-{			// TODO DUDA
-  			/*s1 = ts.buscar_simbolo(to1.image);
-			if ((s1.es_valor()) && (c == Clase_parametro.REF))
-				throw new AsignacionParametroPorValorException(to1.beginLine, to1.beginColumn, to1.image);
-			catch(AsignacionParametroPorValorException e) {
-				noCodificarASM();
-				System.out.println(e);
-			}*/
+{
+  	LinkedList<ExprRegister> lexpr;
+	ExprRegister expr;
+}
+{
+  			
 	try {
 	  	// Un parámetro pasado por valor no puede ser pasado por referencia en una nueva acción
-		"(" (lista_expresiones())? ")"
+		"("
+		(
+		lexpr = lista_expresiones()
+		{
+		  	lexpr = new LinkedList<ExprRegister>();
+		  	ListIterator<ExprRegister> it = lexpr.listIterator(0);
+		  	int i = 1;
+		  	while (it.hasNext()) {
+		  	  	expr = (ExprRegister) it.next();
+				if (expr.parametro_valor) {
+					throw new ArgumentoParametroPorValorException(expr.fila, expr.columna, i);
+				}
+				i++;
+		  	}
+		}
+		)?
+		")"
 	}
 	catch(ParseException e) {
 	  	noCodificarASM();
@@ -1136,14 +1157,35 @@ void argumentos() :
 			t = getNextToken();
 		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
 	}
+	catch(ArgumentoParametroPorValorException e) {
+			noCodificarASM();
+			System.out.println(e);
+	}
 }
 
 // (expresion())+
-void lista_expresiones() :
-{}
+LinkedList<ExprRegister> lista_expresiones() :
+{
+  	LinkedList<ExprRegister> lexpr;
+	ExprRegister expr1, expr2;
+}
 {
 	try {
-		expresion() ("," expresion())*
+		expr1 = expresion()
+		{
+		  	lexpr = new LinkedList<ExprRegister>();
+			lexpr.add(expr1);
+		}
+		(
+		"," expr2 = expresion()
+		{
+		 	lexpr = new LinkedList<ExprRegister>();
+		 	lexpr.add(expr2);
+		}
+		)*
+		{
+		  	return lexpr;
+		}
 	}
 	catch(ParseException e) {
 	  	noCodificarASM();
@@ -1160,7 +1202,7 @@ void lista_expresiones() :
 ExprRegister expresion() :
 {
 	ExprRegister exprIzq = null, exprDer = null, resultado = null;
-	Tipo_variable varExprIzq, varExprDer;
+	Tipo_variable varExprIzq = null, varExprDer = null;
 	Tipo_operador op;
 	boolean igualdad_entera;
 }
@@ -1367,7 +1409,7 @@ ExprRegister expresion_simple() :
 			}
 			resultado = new ExprRegister();
 			
-			// PROPAGAR FILA Y COLUMNA
+			// propagar fila y columna
 			resultado.fila = exprIzq.fila;
 			resultado.columna = exprIzq.columna;
 
@@ -1530,7 +1572,9 @@ Tipo_operador operador_aditivo() :
 ExprRegister termino() :
 {
   	ExprRegister exprIzq = null, exprDer = null, resultado = null;
+  	Tipo_variable varExprIzq = null, varExprDer = null;
 	String tOP;
+	Token to;
 }
 {
 	try {
@@ -1538,6 +1582,9 @@ ExprRegister termino() :
 		(
 		tOP = operador_multiplicativo() exprDer = factor()
 		{
+			varExprIzq = exprIzq.tipo;
+			varExprDer = exprDer.tipo;
+			
 		  	// Para poder operar con el resultado anterior (operador_multiplicativo() factor())*
 		  	if (resultado != null) {
 				exprIzq = resultado;
@@ -1545,15 +1592,15 @@ ExprRegister termino() :
 		  	resultado = new ExprRegister();
 
 			if (tOP.equals("AND")) {
-				if ((exprIzq.tipo != Tipo_variable.BOOLEANO) &&
-					(exprIzq.tipo != Tipo_variable.DESCONOCIDO)) {
-					//TODO
-					System.out.println("EXCEPTION");
+				if ((varExprIzq != Tipo_variable.BOOLEANO) &&
+					(varExprIzq != Tipo_variable.DESCONOCIDO)) {
+					throw new TipoMiembroExpresionInvalidoException(exprIzq.fila,
+							exprIzq.columna, varExprIzq, "booleano, desconocido", "izquierdo");
 				}
-				if ((exprDer.tipo != Tipo_variable.BOOLEANO) &&
-					(exprDer.tipo != Tipo_variable.DESCONOCIDO)) {
-					//TODO
-					System.out.println("EXCEPTION");
+				if ((varExprDer != Tipo_variable.BOOLEANO) &&
+					(varExprDer != Tipo_variable.DESCONOCIDO)) {
+					throw new TipoMiembroExpresionInvalidoException(exprDer.fila,
+							exprDer.columna, varExprDer, "booleano, desconocido", "derecho");
 				}
 
 				resultado.tipo = Tipo_variable.BOOLEANO;
@@ -1569,22 +1616,36 @@ ExprRegister termino() :
 				}
 			}
 			else { // *, /, mod
-				if ((exprIzq.tipo != Tipo_variable.ENTERO) &&
-					(exprIzq.tipo != Tipo_variable.DESCONOCIDO)) {
-					//TODO
-					System.out.println("EXCEPTION");
+				if ((varExprIzq != Tipo_variable.ENTERO) &&
+					(varExprIzq != Tipo_variable.DESCONOCIDO)) {
+					throw new TipoMiembroExpresionInvalidoException(exprIzq.fila,
+							exprIzq.columna, varExprIzq, "entero, desconocido", "izquierdo");
 				}
-				if ((exprDer.tipo != Tipo_variable.ENTERO) &&
-					(exprDer.tipo != Tipo_variable.DESCONOCIDO)) {
-					//TODO
-					System.out.println("EXCEPTION");
+				if ((varExprDer != Tipo_variable.ENTERO) &&
+					(varExprDer != Tipo_variable.DESCONOCIDO)) {
+					throw new TipoMiembroExpresionInvalidoException(exprDer.fila,
+							exprDer.columna, varExprDer, "entero, desconocido", "derecho");
 				}
 
 				resultado.tipo = Tipo_variable.ENTERO;
 				resultado.fila = exprIzq.fila;
 				resultado.columna = exprIzq.columna;
 
-				if ((exprIzq.constante) && (exprDer.constante)) {
+				// Division y modulo 0 en la parte derecha
+				if ((exprDer.constante) && (exprDer.val_entero == 0)) {
+					int dump = 0;
+					switch(tOP) {
+					case "DIV":
+					to = getToken(dump);
+					throw new DivisionModuloCeroException(exprDer.fila, exprDer.columna, to.image, "división");
+					break;
+					case "MOD":
+					to = getToken(dump);
+					throw new DivisionModuloCeroException(exprDer.fila, exprDer.columna, to.image, "módulo");
+					resultado.constante = false;
+					}
+				}
+				else if ((exprIzq.constante) && (exprDer.constante)) {
 					resultado.constante = true;
 
 					switch(tOP) {
@@ -1599,11 +1660,10 @@ ExprRegister termino() :
 					}
 				}
 				else {
-					resultado.constante = false;
+						resultado.constante = false;
 				}
 			}
 
-			// DUDA: Esta bien guardar operador multiplicativo para escribir despues??? (notacion polaca)
 			escribirASM(tOP);
 		}
 		)*
@@ -1624,6 +1684,14 @@ ExprRegister termino() :
 		do {
 			t = getNextToken();
 		} while (!SintacticoUtils.tokenEsperado(t, e.expectedTokenSequences) && t!=null && t.kind != EOF );
+	}
+	catch(TipoMiembroExpresionInvalidoException e) {
+		noCodificarASM();
+		System.out.println(e);
+	}
+	catch(DivisionModuloCeroException e) {
+		noCodificarASM();
+		System.out.println(e);
 	}
 }
 
@@ -1740,6 +1808,9 @@ ExprRegister factor() :
 				tpFactor.tipo, "entero, desconocido");
 			}
 
+  	      	if ((tpExpr.constante) && ((tpExpr.val_entero < 0) || (255 < tpExpr.val_entero)))
+  	      		throw new EntacarOverflowException(tpExpr.fila, tpExpr.columna, tpExpr.val_entero);
+
 			resultado.val_char = (char)tpExpr.val_entero;
 			resultado.tipo = Tipo_variable.CHAR;
 			resultado.constante = true;
@@ -1762,15 +1833,14 @@ ExprRegister factor() :
 		}
 		| to = < tIDENTIFICADOR >
 		{
-			s = ts.buscar_simbolo(to.image);
+	  	    s = ts.buscar_simbolo(to.image);
 			tpID.tipo = s.getVariable();
 			tpID.constante = false;
 			tpID.fila = to.beginLine;
-			tpID.columna = to.beginColumn;
+		    tpID.columna = to.beginColumn;
 
 			escribirComentarioASM("; Acceso variable " + to.image);
 			escribirASM("SRF " + (ts.getNivel() - s.getNivel()) + " " + s.getDir());
-			//System.out.println(s.getNombre() + s.tipo);
 			if (!s.es_referencia()) {
 				escribirASM("DRF");
 			}
@@ -1791,7 +1861,7 @@ ExprRegister factor() :
 		}
 		| to = < tCONSTCHAR >
 		{
-			resultado.val_char = to.image.charAt(0); // TODO
+			resultado.val_char = to.image.charAt(0);
 			resultado.tipo = Tipo_variable.CHAR;
 			resultado.constante = true;
 			resultado.fila = to.beginLine;
@@ -1801,12 +1871,9 @@ ExprRegister factor() :
 
 			return resultado;
 		}
-		| to = < tCONSTCAD > // TODO: Restricción semántica?? Pasar tipo?
+		| to = < tCONSTCAD >
 		{
-		  resultado.val_char = to.image.charAt(0);
-		  resultado.tipo = Tipo_variable.CHAR;
-		  resultado.constante = true;
-		  return resultado;
+		  	throw new Exception(); // Unica excepcion, no merece la pena separar
 		}
 		| to = < tTRUE >
 		{
@@ -1854,7 +1921,14 @@ ExprRegister factor() :
 	}
 	catch(TipoFactorInvalidoException e) {
 	 	noCodificarASM();
-
 	 	System.out.println(e);
+	}
+	catch(EntacarOverflowException e) {
+		noCodificarASM();
+		System.out.println(e);
+	}
+	catch(Exception e) {
+		noCodificarASM();
+		System.out.println("No se puede utilizar una cadena de texto en una exresion");
 	}
 }
