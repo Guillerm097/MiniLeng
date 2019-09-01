@@ -31,7 +31,7 @@ public class Simbolo {
 	int dir;
 	Tipo_simbolo tipo;
 	Tipo_variable variable;
-	Clase_parametro parametro;
+	public Clase_parametro parametro;
 	boolean visible;
 	LinkedList<Simbolo> lista_parametros = new LinkedList<Simbolo>();
 
@@ -145,8 +145,6 @@ public class Simbolo {
 	public void setEtiqueta(String etiqueta) {
 		this.etiqueta = etiqueta;
 	}
-	
-	
 
 	@Override
 	public boolean equals(Object o) {

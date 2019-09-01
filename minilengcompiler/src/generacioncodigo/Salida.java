@@ -29,6 +29,11 @@ public class Salida {
 		return etiqueta;
 	}
 	
+	public static void borrarUltimaLineaASM() {
+		int idx = codigo.lastIndexOf("DRF");
+		codigo = codigo.substring(0, idx-1);
+	}
+	
 	public static void escribirEtiquetaASM() {
 		codigo += "L" + etiqueta + ":\n";
 	}

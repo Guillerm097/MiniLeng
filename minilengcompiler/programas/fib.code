@@ -1,88 +1,273 @@
-null	ENP L0
-	null
+; Programa fibbonaci
+	ENP L0
+; Accion cambiar_de_linea
+L1:
+; Escribir cadena: 13
+	STC 13
+	WRT 0
+; Escribir cadena: 10
+	STC 10
+	WRT 0
+	; Fin de la acción
 	CSF
-	null
-	SRF 2 3
-RD 1
-
-	CSF
-	ASG
+; Accion pedir_dato
+L3:
+; Escribir cadena: "Escribe un numero: "
+	STC 69
+	WRT 0
+	STC 115
+	WRT 0
+	STC 99
+	WRT 0
+	STC 114
+	WRT 0
+	STC 105
+	WRT 0
+	STC 98
+	WRT 0
+	STC 101
+	WRT 0
+	STC 32
+	WRT 0
+	STC 117
+	WRT 0
+	STC 110
+	WRT 0
+	STC 32
+	WRT 0
+	STC 110
+	WRT 0
+	STC 117
+	WRT 0
+	STC 109
+	WRT 0
+	STC 101
+	WRT 0
+	STC 114
+	WRT 0
+	STC 111
+	WRT 0
+	STC 58
+	WRT 0
+	STC 32
+	WRT 0
+; Leer
+; Dirección de la variable dato
 	SRF 1 3
+	DRF
+	RD 1
+	; Fin de la acción
+	CSF
+; Accion dato
+L2:
+; direccion dato
+	SRF	0	3
+	ASGI
+; Dirección de la variable dato
+	SRF 0 3
 	DRF
 	STC 0
 	ASG
-	SRF 1 4
-	DRF
-L 1:	SRF 1 4
-	DRF
-	NGB
-	JMF L2
-	SRF 1 5
-	DRF
-	SRF 1 3
-	DRF
+; Dirección de la variable correcto
+	SRF 0 4
+	STC 0
 	ASG
-	SRF 1 4
-	DRF
-	SRF 1 4
+L4:
+; MQ
+; Acceso variable correcto
+	SRF 0 4
 	DRF
 	NGB
-	JMF L3
-	null
-	SRF 1 5
-	DRF
-	JMP L4
-L 3:L 4:	JMP L1
-L 2:	CSF
-	SRF 1 3
-	DRF
+; Salir del bucle si la guarda se evalúa a falso
 	JMF L5
-	SRF 1 3
+; Invocación a pedir_dato
+	OSF 4 0 L3
+; Dirección de la variable correcto
+	SRF 0 4
+; Acceso variable dato
+	SRF 0 3
 	DRF
+	DRF
+	STC 0
+	GT
+	ASG
+; SI
+; Acceso variable correcto
+	SRF 0 4
+	DRF
+	NGB
+	JMF L6
+; Escribir cadena: "El numero debe ser postivo."
+	STC 69
+	WRT 0
+	STC 108
+	WRT 0
+	STC 32
+	WRT 0
+	STC 110
+	WRT 0
+	STC 117
+	WRT 0
+	STC 109
+	WRT 0
+	STC 101
+	WRT 0
+	STC 114
+	WRT 0
+	STC 111
+	WRT 0
+	STC 32
+	WRT 0
+	STC 100
+	WRT 0
+	STC 101
+	WRT 0
+	STC 98
+	WRT 0
+	STC 101
+	WRT 0
+	STC 32
+	WRT 0
+	STC 115
+	WRT 0
+	STC 101
+	WRT 0
+	STC 114
+	WRT 0
+	STC 32
+	WRT 0
+	STC 112
+	WRT 0
+	STC 111
+	WRT 0
+	STC 115
+	WRT 0
+	STC 116
+	WRT 0
+	STC 105
+	WRT 0
+	STC 118
+	WRT 0
+	STC 111
+	WRT 0
+	STC 46
+	WRT 0
+; Invocación a cambiar_de_linea
+	OSF 4 1 L1
+	JMP L7
+L6:
+; Fin SI
+L7:
+	JMP L4
+L5:
+	; Fin de la acción
+	CSF
+; Accion fib
+L8:
+; SI
+; Acceso variable n
+	SRF 0 3
+	DRF
+	STC 1
+	GT
+	JMF L9
+; Acceso variable n
+	SRF 0 3
+	DRF
+	STC 1
 	SBT
-	SRF 1 5
+; Acceso variable r1
+	SRF 0 5
+; Invocación a fib
+	OSF 4 1 L8
+; Acceso variable n
+	SRF 0 3
 	DRF
-	SRF 1 0
-	DRF
-	SRF 1 3
-	DRF
+	STC 2
 	SBT
-	SRF 1 6
+; Acceso variable r2
+	SRF 0 6
+; Invocación a fib
+	OSF 4 1 L8
+; Dirección de la variable r
+	SRF 0 4
 	DRF
-	SRF 1 0
+; Acceso variable r1
+	SRF 0 5
 	DRF
-	SRF 1 5
-	DRF
-	SRF 1 6
+; Acceso variable r2
+	SRF 0 6
 	DRF
 	PLUS
 	ASG
-	SRF 1 4
-	DRF
-	JMP L6
-L 5:	SRF 1 3
-	DRF
-	ASG
-	SRF 1 4
-	DRF
-L 6:	CSF
-	; Comienzo de fibbonaci
-L 6:	SRF 0 3
-	DRF
-	SRF 0 3
-	DRF
-	SRF 0 3
-	DRF
+	JMP L10
+L9:
+; Dirección de la variable r
 	SRF 0 4
 	DRF
-	SRF 0 0
+; Acceso variable n
+	SRF 0 3
 	DRF
-	nullSRF 0 4
-DRF
-WRT 1
-
-	SRF 0 5
+	ASG
+; Fin SI
+L10:
+	; Fin de la acción
+	CSF
+; Comienzo del programa fibbonaci
+L0:
+; Acceso variable n
+	SRF 0 3
+; Invocación a dato
+	OSF 4 0 L2
+; Acceso variable n
+	SRF 0 3
 	DRF
-	; Fin de fibbonaci
+; Acceso variable r
+	SRF 0 4
+; Invocación a fib
+	OSF 4 0 L8
+; Escribir cadena: "Fibbonaci("
+	STC 70
+	WRT 0
+	STC 105
+	WRT 0
+	STC 98
+	WRT 0
+	STC 98
+	WRT 0
+	STC 111
+	WRT 0
+	STC 110
+	WRT 0
+	STC 97
+	WRT 0
+	STC 99
+	WRT 0
+	STC 105
+	WRT 0
+	STC 40
+	WRT 0
+	SRF 0 3
+	DRF
+	WRT 1
+; Escribir cadena: ") es: "
+	STC 41
+	WRT 0
+	STC 32
+	WRT 0
+	STC 101
+	WRT 0
+	STC 115
+	WRT 0
+	STC 58
+	WRT 0
+	STC 32
+	WRT 0
+	SRF 0 4
+	DRF
+	WRT 1
+; Invocación a cambiar_de_linea
+	OSF 4 0 L1
+; Fin de fibbonaci
 	LVP
 
