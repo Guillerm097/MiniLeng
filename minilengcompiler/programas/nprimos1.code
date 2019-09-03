@@ -2,9 +2,11 @@
 	ENP L0
 ; Accion es_primo
 L1:
+; Dirección de la variable j
 	SRF 0 3
 	STC 2
 	ASG
+; Dirección de la variable divisible
 	SRF 0 4
 	STC 0
 	ASG
@@ -26,6 +28,7 @@ L2:
 	AND
 ; Salir del bucle si la guarda se evalúa a falso
 	JMF L3
+; Dirección de la variable divisible
 	SRF 0 4
 ; Acceso variable i
 	SRF 1 4
@@ -37,6 +40,7 @@ L2:
 	STC 0
 	EQ
 	ASG
+; Dirección de la variable j
 	SRF 0 3
 ; Acceso variable j
 	SRF 0 3
@@ -88,9 +92,11 @@ L5:
 	CSF
 ; Comienzo del programa nprimos
 L0:
+; Dirección de la variable n
 	SRF 0 3
 	STC 100
 	ASG
+; Dirección de la variable i
 	SRF 0 4
 	STC 2
 	ASG
@@ -107,6 +113,7 @@ L6:
 	JMF L7
 ; Invocación a es_primo
 	OSF 4 0 L1
+; Dirección de la variable i
 	SRF 0 4
 ; Acceso variable i
 	SRF 0 4

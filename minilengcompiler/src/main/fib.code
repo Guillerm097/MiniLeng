@@ -3,10 +3,14 @@
 ; Accion cambiar_de_linea
 L1:
 ; Escribir cadena: 13
-	STC 13
+	STC 49
+	WRT 0
+	STC 51
 	WRT 0
 ; Escribir cadena: 10
-	STC 10
+	STC 49
+	WRT 0
+	STC 48
 	WRT 0
 	; Fin de la acción
 	CSF
@@ -81,7 +85,7 @@ L4:
 ; Salir del bucle si la guarda se evalúa a falso
 	JMF L5
 ; Invocación a pedir_dato
-	OSF 4 0 L3
+	OSF 5 0 L3
 ; Dirección de la variable correcto
 	SRF 0 4
 ; Acceso variable dato
@@ -153,7 +157,7 @@ L4:
 	STC 46
 	WRT 0
 ; Invocación a cambiar_de_linea
-	OSF 4 1 L1
+	OSF 5 1 L1
 	JMP L7
 L6:
 ; Fin SI
@@ -224,14 +228,14 @@ L0:
 ; Acceso variable n
 	SRF 0 3
 ; Invocación a dato
-	OSF 4 0 L2
+	OSF 5 0 L2
 ; Acceso variable n
 	SRF 0 3
 	DRF
 ; Acceso variable r
 	SRF 0 4
 ; Invocación a fib
-	OSF 4 0 L8
+	OSF 6 0 L8
 ; Escribir cadena: "Fibbonaci("
 	STC 70
 	WRT 0

@@ -75,6 +75,7 @@ public class MiniLeng
     }
     catch (Error e)
     {
+      noCodificarASM();
       LexicoUtils.mostrarErrorLexico(MiniLengTokenManager.input_stream.getBeginLine(), 
       MiniLengTokenManager.input_stream.getBeginColumn(), 
       MiniLengTokenManager.curChar);
@@ -391,7 +392,7 @@ void programa() :
       escribirComentarioASM("; Programa " + to.image);
       escribirASM("ENP L" + etiquetaPrograma);
     }
-    declaracion_variables() 
+    declaracion_variables(s) 
     declaracion_acciones()
     {
       escribirComentarioASM("; Comienzo del programa " + to.image);
@@ -418,12 +419,12 @@ void programa() :
 }
 
 // (declaracion() ";")*
-void declaracion_variables() :
+void declaracion_variables(Simbolo s) :
 {}
 {
   try
   {
-    (declaracion() ";") *
+    (declaracion(s) ";") *
   }
   catch (ParseException e)
   {
@@ -439,7 +440,7 @@ void declaracion_variables() :
 }
 
 // tipo_variables() identificadores()
-void declaracion() :
+void declaracion(Simbolo s) :
 {
   Tipo_variable tv;
 }
@@ -447,7 +448,7 @@ void declaracion() :
   try
   {
     tv = tipo_variables() 
-    identificadores(tv)
+    identificadores(tv, s)
   }
   catch (ParseException e)
   {
@@ -474,7 +475,7 @@ Tipo_variable tipo_variables() :
     < tENTERO >
     {
       return Tipo_variable.ENTERO;
-    }
+	}
   | < tCARACTER >
     {
       return Tipo_variable.CHAR;
@@ -498,10 +499,11 @@ Tipo_variable tipo_variables() :
 }
 
 // < tIDENTIFICADOR > ("," < tIDENTIFICADOR >)*
-void identificadores(Tipo_variable tipo) :
+void identificadores(Tipo_variable tipo, Simbolo acc) :
 {
   Token to1 = null;
   Token to2 = null;
+  int n = 0;
 }
 {
   try
@@ -509,13 +511,15 @@ void identificadores(Tipo_variable tipo) :
     to1 = < tIDENTIFICADOR >
     {
       ts.introducir_variable(to1.image, tipo, ts.getNivel(), ts.getDir());
+      // System.out.println(to1.image + " " + ts.getDir()); //TODO
       ts.setDir(ts.getDir() + 1);
     }
     ("," to2 = < tIDENTIFICADOR >
     {
       ts.introducir_variable(to2.image, tipo, ts.getNivel(), ts.getDir());
+      // System.out.println(to2.image + " " + ts.getDir()); //TODO
       ts.setDir(ts.getDir() + 1);
-    }
+	}
     ) *
   }
   catch (ParseException e)
@@ -560,7 +564,7 @@ void declaracion_accion() :
 {
   try
   {
-    s = cabecera_accion() ";" declaracion_variables() declaracion_acciones() bloque_sentencias(s)
+    s = cabecera_accion() ";" declaracion_variables(s) declaracion_acciones() bloque_sentencias(s)
     {
       int nivel = ts.getNivel();
       ts.eliminar_variables(nivel);
@@ -568,8 +572,8 @@ void declaracion_accion() :
       ts.eliminar_parametros_ocultos(nivel);
       // Se recupera el nivel y la direccion del BA anterior
       ts.setNivel(nivel - 1);
-      ts.setDir(s.getDir());
-      escribirASM("; Fin de la acci\u00f3n");
+	  ts.setDir(s.getDir());
+      escribirASM("; Fin de la acción");
       escribirASM("CSF");
     }
   }
@@ -602,6 +606,7 @@ Simbolo cabecera_accion() :
     {
       int nivel = ts.getNivel();
       int dir = ts.getDir();
+	  //System.out.println("Accion " + to.image + ";" + dir); //TODO
       try
       {
         s = ts.buscar_simbolo(to.image);
@@ -612,6 +617,7 @@ Simbolo cabecera_accion() :
         if ((s != null) && (s.getNivel() == nivel)) 
         	throw new IdentificadorDuplicadoException(to.beginLine, to.beginColumn, to.image);
         s = ts.introducir_accion(to.image, nivel, ts.getDir());
+        // System.out.println(s.getNombre() + " " + s.getDir()); // TODO
         etiquetaAccion = nuevaEtiqueta();
         s.setEtiqueta(String.valueOf(etiquetaAccion));
       }
@@ -701,8 +707,7 @@ void parametros(LinkedList < Simbolo > ls) :
 void lista_parametros(Clase_parametro c, Tipo_variable v, LinkedList < Simbolo > ls) :
 {
   Token to1, to2;
-  Simbolo s1 = new Simbolo();
-  Simbolo s2 = new Simbolo();
+  Simbolo s1 = null, s2 = null;
 }
 {
   try
@@ -719,6 +724,7 @@ void lista_parametros(Clase_parametro c, Tipo_variable v, LinkedList < Simbolo >
         	throw new IdentificadorDuplicadoException(to1.beginLine, to1.beginColumn, to1.image);
       }
       s1 = ts.introducir_parametro(to1.image, v, c, ts.getNivel(), ts.getDir());
+	  // System.out.println(to1.image + " " + ts.getDir()); //TODO
       ts.setDir(ts.getDir() + 1);
       ls.add(s1);
     }
@@ -734,6 +740,7 @@ void lista_parametros(Clase_parametro c, Tipo_variable v, LinkedList < Simbolo >
         	throw new IdentificadorDuplicadoException(to2.beginLine, to2.beginColumn, to2.image);
       }
       s2 = ts.introducir_parametro(to2.image, v, c, ts.getNivel(), ts.getDir());
+      // System.out.println(to2.image + " " + ts.getDir()); //TODO
       ts.setDir(ts.getDir() + 1);
       ls.add(s2);
     }
@@ -795,9 +802,23 @@ void bloque_sentencias(Simbolo s) :
   try
   {
     {
-        if (s.es_accion()) {
+        if (s.es_accion())
+        {
 			escribirComentarioASM("; Accion " + s.getNombre());
 			escribirEtiquetaASM(Integer.parseInt(s.getEtiqueta()));
+			
+			// Recuperar parametros
+			LinkedList<Simbolo> l = s.getLista_parametros();
+
+			int tam = l.size() - 1;
+			while(tam >= 0)
+			{
+			  Simbolo param = l.get(tam);
+			  escribirComentarioASM("; Recuperar " + param.getNombre());
+			  escribirASM("SRF " + (ts.getNivel() - param.getNivel()) + " " + param.getDir());
+			  escribirASM("ASGI");
+			  tam--;
+			}
         }
     }
     < tPRINCIPIO > lista_sentencias() < tFIN >
@@ -865,9 +886,9 @@ void sentencia() :
   | resto_invocacion_accion(s)
     {
       invocacion_accion = false;
-      
       escribirComentarioASM("; Invocación a " + to.image);
-      escribirASM("OSF " + (s.getDir() - 1) + " " + (ts.getNivel() - s.getNivel()) + 
+
+      escribirASM("OSF " + (ts.getDir() - 1) + " " + (ts.getNivel() - s.getNivel()) + 
       " L" + s.getEtiqueta());
     }
     ) // Hay que factorizar
@@ -902,6 +923,7 @@ void resto_asignacion(Simbolo s) :
   try
   {
     {
+      
       escribirComentarioASM("; Dirección de la variable " +  s.getNombre());
       escribirASM("SRF " + (ts.getNivel() - s.getNivel()) + " " + s.getDir());
 	  if (s.es_referencia())
@@ -1115,10 +1137,8 @@ void lista_escribibles() :
       if ((valorEntero < 0) || (255 < valorEntero)) 
       	throw new EntacarOverflowException(to1.beginLine, to1.beginColumn, valorEntero);
       escribirComentarioASM("; Escribir cadena: " + to1.image);
-      String cadena = to1.image;
-      escribirASM("STC " + cadena);
-      escribirASM("WRT 0");
-      cadena = cadena.substring(1);
+      escribirASM("STC " + to1.image);
+	  escribirASM("WRT 0");
     }
   | to1 = < tIDENTIFICADOR >
     {
@@ -1141,7 +1161,7 @@ void lista_escribibles() :
   | to1 = < tCONSTCAD >
     {
       escribirComentarioASM("; Escribir cadena: " + to1.image);
-      cadena = to1.image;
+      String cadena = to1.image;
       cadena = cadena.substring(1, cadena.length() - 1);
       while (!cadena.isEmpty())
       {
@@ -2165,10 +2185,10 @@ ExprRegister factor() :
       resultado.columna = tpExpr.columna;
       return resultado;
     }
-  | to = < tCARAENT > "(" expresion() ")"
+  | to = < tCARAENT > "(" tpExpr = expresion() ")"
     {
       if ((tpExpr.tipo != Tipo_variable.CHAR) 
-      && (tpFactor.tipo != Tipo_variable.DESCONOCIDO))
+      && (tpExpr.tipo != Tipo_variable.DESCONOCIDO))
       {
         throw new TipoFactorInvalidoException(tpFactor.fila, tpFactor.columna, 
         tpFactor.tipo, "char, desconocido");
@@ -2227,7 +2247,7 @@ ExprRegister factor() :
     }
   | to = < tCONSTCAD >
     {
-      throw new Exception(); // Unica excepcion, no merece la pena separar
+      throw new SemanticException(); // Unica excepcion, no merece la pena separar
     }
   | to = < tTRUE >
     {
@@ -2281,7 +2301,7 @@ ExprRegister factor() :
     noCodificarASM();
     System.out.println(e);
   }
-  catch (Exception e)
+  catch (SemanticException e)
   {
     noCodificarASM();
     System.out.println("No se puede utilizar una cadena de texto en una exresion");

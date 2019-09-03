@@ -2,6 +2,7 @@
 	ENP L0
 ; Comienzo del programa noventa_y_nueve
 L0:
+; Dirección de la variable n
 	SRF 0 5
 	STC 0
 	ASG
@@ -83,6 +84,7 @@ L2:
 	WRT 0
 	STC 32
 	WRT 0
+; Dirección de la variable x
 	SRF 0 3
 ; Acceso variable n
 	SRF 0 5
@@ -90,6 +92,7 @@ L2:
 	STC 10
 	DIV
 	ASG
+; Dirección de la variable y
 	SRF 0 4
 ; Acceso variable n
 	SRF 0 5
@@ -97,6 +100,7 @@ L2:
 	STC 10
 	MOD
 	ASG
+; Dirección de la variable m
 	SRF 0 6
 	STC 10
 ; Acceso variable y
@@ -117,6 +121,7 @@ L2:
 	DRF
 	GT
 	JMF L3
+; Dirección de la variable n
 	SRF 0 5
 ; Acceso variable n
 	SRF 0 5
@@ -128,6 +133,7 @@ L2:
 	ASG
 	JMP L4
 L3:
+; Dirección de la variable n
 	SRF 0 5
 ; Acceso variable m
 	SRF 0 6
@@ -139,6 +145,7 @@ L3:
 	ASG
 ; Fin SI
 L4:
+; Dirección de la variable x
 	SRF 0 3
 ; Acceso variable n
 	SRF 0 5
@@ -146,6 +153,7 @@ L4:
 	STC 10
 	DIV
 	ASG
+; Dirección de la variable y
 	SRF 0 4
 ; Acceso variable n
 	SRF 0 5
@@ -153,6 +161,7 @@ L4:
 	STC 10
 	MOD
 	ASG
+; Dirección de la variable m
 	SRF 0 6
 	STC 10
 ; Acceso variable y
@@ -164,6 +173,7 @@ L4:
 	DRF
 	PLUS
 	ASG
+; Dirección de la variable n
 	SRF 0 5
 ; Acceso variable m
 	SRF 0 6
