@@ -4,19 +4,19 @@
 L1:
 ; Dirección de la variable c
 	SRF 0 3
-	STC 34
+	STC " "
 	ASG
 L2:
 ; MQ
 ; Acceso variable c
 	SRF 0 3
 	DRF
-	STC 34
+	STC "S"
 	NEQ
 ; Acceso variable c
 	SRF 0 3
 	DRF
-	STC 34
+	STC "N"
 	NEQ
 	AND
 ; Salir del bucle si la guarda se evalúa a falso
@@ -51,22 +51,22 @@ L3:
 	; Fin de la acción
 	CSF
 ; Accion pedirletra
-L4:
+
 ; Dirección de la variable c
 	SRF 0 3
-	STC 34
+	STC " "
 	ASG
 L5:
 ; MQ
 ; Acceso variable c
 	SRF 0 3
 	DRF
-	STC 34
+	STC "A"
 	LT
 ; Acceso variable c
 	SRF 0 3
 	DRF
-	STC 34
+	STC "Z"
 	GT
 	OR
 ; Salir del bucle si la guarda se evalúa a falso
@@ -190,14 +190,10 @@ L0:
 	STC 46
 	WRT 0
 ; Escribir cadena: 13
-	STC 49
-	WRT 0
-	STC 51
+	STC 13
 	WRT 0
 ; Escribir cadena: 10
-	STC 49
-	WRT 0
-	STC 48
+	STC 10
 	WRT 0
 ; Escribir cadena: "Listo?"
 	STC 76
@@ -216,11 +212,11 @@ L0:
 	OSF 9 0 L1
 ; Dirección de la variable min
 	SRF 0 5
-	STC 34
+	STC "A"
 	ASG
 ; Dirección de la variable max
 	SRF 0 6
-	STC 34
+	STC "Z"
 	ASG
 ; Dirección de la variable headivinado
 	SRF 0 7
@@ -254,11 +250,17 @@ L7:
 	STC 2
 	DIV
 	ASG
+	STC "("
+	WRT 0
 	SRF 0 5
 	DRF
 	WRT 0
+	STC ","
+	WRT 0
 	SRF 0 6
 	DRF
+	WRT 0
+	STC ")"
 	WRT 0
 ; Escribir cadena: ": has pensado en la letra "
 	STC 58
@@ -316,13 +318,15 @@ L7:
 	SRF 0 4
 	DRF
 	WRT 0
+	STC "?"
+	WRT 0
 ; Invocación a siono
 	OSF 9 0 L1
 ; SI
 ; Acceso variable respuesta
 	SRF 0 3
 	DRF
-	STC 34
+	STC "N"
 	EQ
 	JMF L9
 ; Escribir cadena: "La letra que has pensado es mayor?"
@@ -400,7 +404,7 @@ L7:
 ; Acceso variable respuesta
 	SRF 0 3
 	DRF
-	STC 34
+	STC "S"
 	EQ
 	JMF L10
 ; Dirección de la variable min
@@ -474,14 +478,10 @@ L8:
 	DRF
 	WRT 0
 ; Escribir cadena: 13
-	STC 49
-	WRT 0
-	STC 51
+	STC 13
 	WRT 0
 ; Escribir cadena: 10
-	STC 49
-	WRT 0
-	STC 48
+	STC 10
 	WRT 0
 	JMP L14
 L13:

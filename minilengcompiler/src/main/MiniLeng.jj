@@ -121,7 +121,7 @@ MORE :
 
 TOKEN : /* PALABRAS RESERVADAS */
 {
-  < tVAL : "val" >			
+  < tVAL : "val" >
   {
     LexicoUtils.anyadirToken("palabra reservada");
   }
@@ -717,32 +717,34 @@ void lista_parametros(Clase_parametro c, Tipo_variable v, LinkedList < Simbolo >
       try
       {
         s1 = ts.buscar_simbolo(to1.image);
+        if (s1.getNivel() == ts.getNivel()) {
+		  throw new IdentificadorDuplicadoException(to1.beginLine, to1.beginColumn, to1.image);
+        }
       }
       catch (SimboloNoEncontradoException e)
       {
-        if (s1.es_parametro()) 
-        	throw new IdentificadorDuplicadoException(to1.beginLine, to1.beginColumn, to1.image);
+        s1 = ts.introducir_parametro(to1.image, v, c, ts.getNivel(), ts.getDir());
+        // System.out.println(to1.image + " " + ts.getDir()); //TODO
+		ts.setDir(ts.getDir() + 1);
+        ls.add(s1);
       }
-      s1 = ts.introducir_parametro(to1.image, v, c, ts.getNivel(), ts.getDir());
-	  // System.out.println(to1.image + " " + ts.getDir()); //TODO
-      ts.setDir(ts.getDir() + 1);
-      ls.add(s1);
     }
     ("," to2 = < tIDENTIFICADOR >
     {
       try
       {
         s2 = ts.buscar_simbolo(to2.image);
+		if (s2.getNivel() == ts.getNivel()) {
+		  throw new IdentificadorDuplicadoException(to2.beginLine, to2.beginColumn, to2.image);
+		}
       }
       catch (SimboloNoEncontradoException e)
       {
-        if (s2.es_parametro()) 
-        	throw new IdentificadorDuplicadoException(to2.beginLine, to2.beginColumn, to2.image);
+        s2 = ts.introducir_parametro(to2.image, v, c, ts.getNivel(), ts.getDir());
+        // System.out.println(to2.image + " " + ts.getDir()); //TODO
+        ts.setDir(ts.getDir() + 1);
+        ls.add(s2);
       }
-      s2 = ts.introducir_parametro(to2.image, v, c, ts.getNivel(), ts.getDir());
-      // System.out.println(to2.image + " " + ts.getDir()); //TODO
-      ts.setDir(ts.getDir() + 1);
-      ls.add(s2);
     }
     ) *
   }
@@ -1158,6 +1160,12 @@ void lista_escribibles() :
       }
     }
   | to1 = < tCONSTCHAR >
+  	{
+	  String char_img = to1.image;
+	  char c = char_img.charAt(1);
+  	  escribirASM("STC " + "\"" + c + "\"");
+      escribirASM("WRT 0");
+	}
   | to1 = < tCONSTCAD >
     {
       escribirComentarioASM("; Escribir cadena: " + to1.image);
@@ -1165,7 +1173,7 @@ void lista_escribibles() :
       cadena = cadena.substring(1, cadena.length() - 1);
       while (!cadena.isEmpty())
       {
-        char c = cadena.charAt(0);
+        c = cadena.charAt(0);
         escribirASM("STC " + (int) c);
         escribirASM("WRT 0");
         cadena = cadena.substring(1);
@@ -2193,6 +2201,7 @@ ExprRegister factor() :
         throw new TipoFactorInvalidoException(tpFactor.fila, tpFactor.columna, 
         tpFactor.tipo, "char, desconocido");
       }
+      char valor = tpExpr.val_char;
       resultado.val_entero = Character.getNumericValue(tpExpr.val_char);
       resultado.tipo = Tipo_variable.ENTERO;
       resultado.fila = to.beginLine;
@@ -2237,12 +2246,12 @@ ExprRegister factor() :
     }
   | to = < tCONSTCHAR >
     {
-      resultado.val_char = to.image.charAt(0);
+      resultado.val_char = to.image.charAt(1);
       resultado.tipo = Tipo_variable.CHAR;
       resultado.constante = true;
       resultado.fila = to.beginLine;
       resultado.columna = to.beginColumn;
-      escribirASM("STC " + (int) to.image.charAt(0));
+      escribirASM("STC " + "\"" + resultado.val_char + "\"");
       return resultado;
     }
   | to = < tCONSTCAD >

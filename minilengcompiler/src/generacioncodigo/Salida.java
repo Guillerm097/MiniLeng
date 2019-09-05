@@ -49,9 +49,23 @@ public class Salida {
 	public static void escribirComentarioASM(String sentencia) {
 		codigo += sentencia + '\n';
 	}
+	
+	private static void eliminarReferenciasInutiles() {
+		int l = 0;
+		int idx = codigo.indexOf("L" + l + ":");
+		while(idx != -1) {
+			int idx_invocacion = codigo.indexOf("L" + l + "\n");
+			if (idx_invocacion == -1) {
+				codigo = codigo.replaceAll("L" + l + ":" , "");
+			}
+			l++;
+			idx = codigo.indexOf("L" + l + ":");
+		}
+	}
 
 	public static void escribirFicheroFinalASM() throws IOException {
 		if (volcar_salida) {
+			eliminarReferenciasInutiles();
 			FileWriter fw = new FileWriter(fichero_destino);
 			fw.write(codigo + '\n');
 			fw.close();

@@ -650,6 +650,20 @@ L0:
 	RD 0
 ; Invocación a primer_dia_anho
 	OSF 8 0 L1
+; Escribir cadena: "es"
+	STC 101
+	WRT 0
+	STC 115
+	WRT 0
+	SRF 0 5
+	DRF
+	WRT 1
+; Escribir cadena: 13
+	STC 13
+	WRT 0
+; Escribir cadena: 10
+	STC 10
+	WRT 0
 ; Invocación a primer_dia_mes
 	OSF 8 0 L4
 	SRF 0 6

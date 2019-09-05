@@ -34,7 +34,6 @@ public class Simbolo {
 	Clase_parametro parametro;
 	boolean visible;
 	LinkedList<Simbolo> lista_parametros = new LinkedList<Simbolo>();
-	int numVar;
 	
 	public void introducir_programa(String nombre, int dir) {
 		this.nombre = nombre;
@@ -147,14 +146,6 @@ public class Simbolo {
 		this.etiqueta = etiqueta;
 	}
 	
-	public int getNumVar() {
-		return this.numVar;
-	}
-	
-	public void setNumVar(int n) {
-		this.numVar = n;
-	}
-
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {

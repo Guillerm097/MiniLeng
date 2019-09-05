@@ -105,6 +105,9 @@ PRINCIPIO
      escribir("Introduce un anio en cifras:");
      leer(anho, ln);
      primer_dia_anho;
+     escribir("es");
+     escribir(dia1anho);
+     escribir (entacar (13), entacar (10));
      primer_dia_mes;
      escribir(dia1mes);
 
